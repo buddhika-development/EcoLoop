@@ -1,11 +1,11 @@
-import { Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
-import Header from "../../src/components/Header";
 import FabChatbot from "@/src/components/FabChatbot";
 import { colors } from "@/src/theme/colors";
+import { Ionicons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Header from "../../src/components/Header";
 
 export default function AppLayout() {
     const insets = useSafeAreaInsets();
@@ -26,7 +26,7 @@ export default function AppLayout() {
                         tabBarLabelStyle: { fontSize: 12, marginBottom: 2 },
                         tabBarItemStyle: { paddingVertical: 4 },
                         tabBarStyle: {
-                            height: 60 + (insets.bottom || 0),
+                            height: 66 + (insets.bottom || 0),
                             paddingTop: 6,
                             paddingBottom: Math.max(insets.bottom, 8),
                             backgroundColor: colors.brand.primary,
