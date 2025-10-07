@@ -1,0 +1,15 @@
+# dependencies
+node_modules/
+# Expo & Metro
+.expo/
+.expo-shared/
+# Builds
+android/
+ios/
+# Env files
+.env
+server/.env
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
