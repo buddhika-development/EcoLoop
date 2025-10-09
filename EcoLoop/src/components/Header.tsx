@@ -1,20 +1,49 @@
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { View, TouchableOpacity, Image, StyleSheet, Text } from "react-native";
+import { colors } from "../theme/colors";
+import { useUserProfile } from "@/src/hooks/useUserProfile";
+import { Link, router } from "expo-router";
 
+/**
+ * Header:
+ * - Left: EcoLoop logo (purple bg version) from assets/logo2.png
+ * - Right: User avatar. If no photo, show initial in a circle.
+ * - Tap avatar => navigate to Profile screen (/(app)/profile)
+ */
 export default function Header() {
+    const { user, profile } = useUserProfile();
+
+    const displayName =
+        profile?.fullName ||
+        user?.displayName ||
+        (user?.email ? user.email.split("@")[0] : "U");
+
+    const initial = (displayName ?? "U").trim().charAt(0).toUpperCase();
+    const avatarUrl = profile?.profilePic || user?.photoURL || null;
+
     return (
         <View style={styles.wrapper}>
-            <TouchableOpacity style={styles.side}>
-                <Ionicons name="menu" size={22} />
-            </TouchableOpacity>
-
-            <Text style={styles.title} numberOfLines={1}>EcoLoop</Text>
-
-            <TouchableOpacity style={styles.side}>
+            <Link href="/(app)/(tabs)/home" asChild>
                 <Image
-                    source={{ uri: "https://i.pravatar.cc/100" }}
-                    style={styles.avatar}
+                    source={require("@/assets/logo2.png")}
+                    resizeMode="contain"
+                    style={styles.logo}
                 />
+            </Link>
+
+            <View style={{ flex: 1 }} />
+
+            <TouchableOpacity
+                style={styles.avatarBtn}
+                onPress={() => router.push("/(app)/profile" as any)}
+                activeOpacity={0.8}
+            >
+                {avatarUrl ? (
+                    <Image source={{ uri: avatarUrl }} style={styles.avatarImg} />
+                ) : (
+                    <View style={styles.initialCircle}>
+                        <Text style={styles.initialText}>{initial}</Text>
+                    </View>
+                )}
             </TouchableOpacity>
         </View>
     );
@@ -22,16 +51,24 @@ export default function Header() {
 
 const styles = StyleSheet.create({
     wrapper: {
-        height: 60,
-        paddingHorizontal: 5,
+        height: 56,
+        paddingHorizontal: 12,
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between",
-        backgroundColor: "#fff",
-        borderBottomWidth: 1,
-        borderBottomColor: "#ececec",
+        backgroundColor: colors.brand.primary,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: colors.surface.foreground,
     },
-    title: { fontSize: 18, fontWeight: "700", textAlign: "center", flex: 1 },
-    side: { width: 40, alignItems: "center", justifyContent: "center" },
-    avatar: { width: 28, height: 28, borderRadius: 14 },
+    logo: { width: 70, height: 70, marginTop: -12, marginLeft: -6 },
+    avatarBtn: { width: 36, height: 36, borderRadius: 18, overflow: "hidden" },
+    avatarImg: { width: "100%", height: "100%" },
+    initialCircle: {
+        width: "100%",
+        height: "100%",
+        borderRadius: 18,
+        backgroundColor: "#FFFFFF33",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    initialText: { color: "#fff", fontWeight: "700" },
 });
