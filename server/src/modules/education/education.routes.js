@@ -1,14 +1,11 @@
 
 import { Router } from "express";
+import { handleHealthRequest } from "./eucation.controller.js";
 
 const router = Router();
 
-router.get("/", (req, res) => {
-    res.json({
-        success: true,
-        message: "Education API is working",
-        timestamp: new Date().toISOString()
-    });
-});
+// check health of the router
+router.get("/", handleHealthRequest);
+
 
 export default router;
