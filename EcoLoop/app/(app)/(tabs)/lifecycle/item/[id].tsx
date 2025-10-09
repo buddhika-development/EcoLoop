@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
 import { View, Text, ActivityIndicator } from "react-native";
-import { useItemQuery } from "../../../../src/features/lifecycle/hooks";
+import { useItemQuery } from "../../../../../src/features/lifecycle/hooks";
 
 export default function ItemDetails() {
     const { id } = useLocalSearchParams<{ id: string }>();
