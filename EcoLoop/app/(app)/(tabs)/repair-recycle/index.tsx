@@ -76,11 +76,12 @@ export default function ShopFinder() {
         </View>
 
         {/* Floating: Near Me FAB */}
+        {mode == "map" && (
         <View style={s.fabWrap}>
           <TouchableOpacity onPress={recenter} style={s.fab}>
             <FontAwesome5 name="crosshairs" size={18} color={colors.text.inverse} />
           </TouchableOpacity>
-        </View>
+        </View> )}
 
         <FilterSheet
           visible={sheetOpen}
