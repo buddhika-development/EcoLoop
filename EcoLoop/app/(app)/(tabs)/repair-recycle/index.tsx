@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from "react-native";
 import { colors } from "@/src/theme/colors";
 import SearchBar from "@/src/components/repair-recycle/SearchBar";
 import FilterSheet from "@/src/components/repair-recycle/FilterSheet";
@@ -8,6 +8,22 @@ import ListView from "@/src/components/repair-recycle/ListView";
 import { useCurrentLocation, useDebounce, useShops } from "@/src/features/repair-recycle/hooks";
 import { useRouter } from "expo-router";
 import { FontAwesome5 } from "@expo/vector-icons";
+
+type Filters = {
+  type:"repair"|"recycle"|"both";
+  categories:string[];
+  rating_gte?:number;
+  openNow?:boolean;
+};
+
+function countActiveFilters(f: Filters) {
+  let n = 0;
+  if (f.type && f.type !== "both") n++;
+  if (f.categories && f.categories.length > 0) n++;
+  if (f.rating_gte && f.rating_gte > 0) n++;
+  if (f.openNow) n++;
+  return n;
+}
 
 export default function ShopFinder() {
   const router = useRouter();
@@ -19,7 +35,7 @@ export default function ShopFinder() {
   const [q, setQ] = useState("");
   const qDebounced = useDebounce(q, 350);
 
-  const [filters, setFilters] = useState<{ type:"repair"|"recycle"|"both"; categories:string[]; rating_gte?:number; openNow?:boolean }>({
+  const [filters, setFilters] = useState<Filters>({
     type:"both", categories:[], rating_gte:0, openNow:false
   });
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -30,12 +46,13 @@ export default function ShopFinder() {
     categories: filters.categories.length ? filters.categories : undefined,
     rating_gte: filters.rating_gte && filters.rating_gte>0 ? filters.rating_gte : undefined,
     openNow: filters.openNow || undefined,
-  } );
+  });
 
   const filtered = useMemo(()=> data, [data]);
+  const filterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
   const onOpenFilter = () => setSheetOpen(true);
-  const onApplyFilter = (v:any) => { setFilters(v); setSheetOpen(false); };
+  const onApplyFilter = (v:Filters) => { setFilters(v); setSheetOpen(false); };
 
   const goToShop = (id:string) => router.push(`/repair-recycle/shop/${id}`);
 
@@ -43,6 +60,11 @@ export default function ShopFinder() {
     if (!coords) return;
     mapRef.current?.recenterTo(coords.lat, coords.lng);
   };
+
+  const openSaved = () => {
+    router.push("/repair-recycle/saved");
+  };
+  
 
   return (
     <SafeAreaView style={s.safe}>
@@ -58,10 +80,16 @@ export default function ShopFinder() {
           </ScrollView>
         )}
 
-        {/* Floating: Search + Filter */}
+        {/* Floating: Search + Filter + Bookmark */}
         <View style={s.floatingTop}>
           <View style={{ paddingHorizontal: 16 }}>
-            <SearchBar value={q} onChange={setQ} onOpenFilter={onOpenFilter} />
+          <SearchBar
+              value={q}
+              onChange={setQ}
+              onOpenFilter={onOpenFilter}
+              filterCount={filterCount}
+              onOpenSaved={openSaved}
+          />
           </View>
 
           {/* Floating: Map/List toggle */}
@@ -75,13 +103,14 @@ export default function ShopFinder() {
           </View>
         </View>
 
-        {/* Floating: Near Me FAB */}
+        {/* Floating: Near Me FAB (map only) */}
         {mode == "map" && (
-        <View style={s.fabWrap}>
-          <TouchableOpacity onPress={recenter} style={s.fab}>
-            <FontAwesome5 name="crosshairs" size={18} color={colors.text.inverse} />
-          </TouchableOpacity>
-        </View> )}
+          <View style={s.fabWrap}>
+            <TouchableOpacity onPress={recenter} style={s.fab}>
+              <FontAwesome5 name="crosshairs" size={18} color={colors.text.inverse} />
+            </TouchableOpacity>
+          </View>
+        )}
 
         <FilterSheet
           visible={sheetOpen}
@@ -112,9 +141,7 @@ const s = StyleSheet.create({
   toggleActive:{ backgroundColor: colors.brand.primary },
   toggleText:{ color: colors.text.base, fontWeight:"700" },
   toggleTextActive:{ color: colors.text.inverse },
-  fabWrap:{
-    position:"absolute", right:18, bottom:70
-  },
+  fabWrap:{ position:"absolute", right:18, bottom:70 },
   fab:{
     width:53, height:53, borderRadius:30,
     backgroundColor: colors.brand.primary,

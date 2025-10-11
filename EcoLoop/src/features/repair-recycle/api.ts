@@ -109,11 +109,23 @@ function nameMatches(q: string | undefined, name: string) {
   return normStr(name).includes(normStr(q));
 }
 
-function categoriesMatch(filter: string[] | undefined, cats: string[]) {
-  if (!filter || filter.length === 0) return true;
-  const set = new Set(cats.map(normStr));
-  return filter.some((c) => set.has(normStr(c)));
+function normalizeCategoryKey(s?: string) {
+  return (s || "")
+    .toLowerCase()
+    .replace(/\s+/g, "_") // replace spaces with underscores
+    .replace(/[^a-z0-9_]/g, ""); // strip other symbols
 }
+
+function categoriesMatch(filter: string[] | undefined, shopCats: string[]) {
+  if (!filter || filter.length === 0) return true;
+
+  const shopKeys = shopCats.map(normalizeCategoryKey);
+  const filterKeys = filter.map(normalizeCategoryKey);
+
+  // A match if at least one filterKey exists in shopKeys
+  return filterKeys.some((f) => shopKeys.includes(f));
+}
+
 
 function ratingOk(min: number | undefined, rating?: { avg?: number }) {
   if (!min) return true;
@@ -193,11 +205,11 @@ export async function listShops(params: ShopQuery = {}): Promise<ShopView[]> {
   let qRef: Query<DocumentData> = colRef as unknown as Query<DocumentData>;
 
   // Optional server-side type filter
-  /*if (params.type === "repair") {
+  if (params.type === "repair") {
     qRef = query(colRef, where("type", "==", "repair"));
   } else if (params.type === "recycle") {
     qRef = query(colRef, where("type", "==", "recycle"));
-  }*/
+  }
 
   const snap = await getDocs(qRef);
   const items: Shop[] = snap.docs.map((d) => toShop(d.id, d.data()));

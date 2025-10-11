@@ -1,5 +1,5 @@
 // app/(app)/repair-recycle/shop/[id].tsx
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState , useCallback } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet, Linking,
@@ -18,6 +18,11 @@ import {
   deleteReviewAndUpdateShopRating,
   type Review,
 } from "@/src/features/repair-recycle/reviews";
+import {
+  saveShop,
+  unsaveShop,
+  isShopSaved,
+} from "@/src/features/repair-recycle/saved";
 import { auth } from "@/src/lib/firebase";
 
 export default function ShopDetails() {
@@ -31,6 +36,8 @@ export default function ShopDetails() {
   const [stars, setStars] = useState(5);
   const [comment, setComment] = useState("");
 
+  const [saved, setSaved] = useState(false);
+
   // Load reviews
   useEffect(() => {
     if (!id) return;
@@ -39,6 +46,24 @@ export default function ShopDetails() {
       setReviews(list);
     })();
   }, [id]);
+
+  // Check saved state whenever id or user changes
+  useEffect(() => {
+    (async () => {
+      if (!id) return;
+      const uid = auth.currentUser?.uid;
+      if (!uid) {
+        setSaved(false);
+        return;
+      }
+      try {
+        const ok = await isShopSaved(uid, id);
+        setSaved(ok);
+      } catch {
+        setSaved(false);
+      }
+    })();
+  }, [id, auth.currentUser?.uid]);
 
   // "My review first" ordering
   const sortedReviews = useMemo(() => {
@@ -71,6 +96,26 @@ export default function ShopDetails() {
     const q = encodeURIComponent(`${loc.lat},${loc.lng} (${shop?.name})`);
     Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${q}`);
   };
+
+  const onToggleSave = useCallback(async () => {
+    if (!id) return;
+    const user = auth.currentUser;
+    if (!user) {
+      Alert.alert("Sign in required", "Please sign in to save shops.");
+      return;
+    }
+    try {
+      if (saved) {
+        await unsaveShop(user.uid, id);
+        setSaved(false);
+      } else {
+        await saveShop(user.uid, id);
+        setSaved(true);
+      }
+    } catch (e: any) {
+      Alert.alert("Error", e?.message || "Could not update saved state.");
+    }
+  }, [id, saved]);
 
   const submitReview = async () => {
     if (!id) return;
@@ -162,8 +207,12 @@ export default function ShopDetails() {
             <Text style={s.topTitle} numberOfLines={1}>{shop.name}</Text>
           </View>
 
-          <TouchableOpacity style={s.iconBtn}>
-            <MaterialIcons name="bookmark-border" size={20} color={colors.text.base} />
+          <TouchableOpacity style={s.iconBtn} onPress={onToggleSave}>
+            <MaterialIcons
+              name={saved ? "bookmark" : "bookmark-border"}
+              size={20}
+              color={colors.text.base}
+            />
           </TouchableOpacity>
         </View>
 
