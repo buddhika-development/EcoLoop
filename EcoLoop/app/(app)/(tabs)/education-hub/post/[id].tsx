@@ -2,52 +2,96 @@ import SectionTitle from '@/components/ui/Titles/SectionTitle'
 import PostVerticalScrollerSection from '@/src/components/layouts/EducationHub/PostVerticalScrollerSection'
 import SmallTitle from '@/src/components/ui/Titles/SmallTitle'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import React from 'react'
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const SinglePost = () => {
 
-    const posts = [
-      {
-          post_id : "2000000",
-          title: "This is sample post title",
-          content:
-          "This is sample post content with the large text area and the post images and show the details about eco friendly and healthy life with less harmfull habits.",
-          image: "sakaboom.jpg",
-      },
-      {
-          post_id : "2000000",
-          title: "This is sample post title 2",
-          content:
-          "This is sample post content with the large text area and the post images and show the details about eco friendly and healthy life with less harmfull habits.",
-          image: "sakaboom.jpg",
-      },
-      {
-          post_id : "2000000",
-          title: "This is sample post title 3",
-          content:
-          "This is sample post content with the large text area and the post images and show the details about eco friendly and healthy life with less harmfull habits.",
-          image: "sakaboom.jpg",
-      },
-      {
-          post_id : "2000000",
-          title: "This is sample post title 4",
-          content:
-          "This is sample post content with the large text area and the post images and show the details about eco friendly and healthy life with less harmfull habits.",
-          image: "sakaboom.jpg",
-      },
-      {
-          post_id : "2000000",
-        title: "This is sample post title 5",
-        content:
-          "This is sample post content with the large text area and the post images and show the details about eco friendly and healthy life with less harmfull habits.",
-        image: "sakaboom.jpg",
-      },
-    ];
+    const { id } = useLocalSearchParams<{ id: string }>()
+    const router = useRouter()
 
-  const { id } = useLocalSearchParams<{ id: string }>()
-  const router = useRouter()
+    // handle all posts fetch
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [allPosts, setAllPosts] = useState<any[] | null>(null);
+    const [searchPosts, setSearchPosts] = useState<any[] | null>(null);
+
+    // handle single post details fetch
+    const [postDetails, setPostDetails] = useState<any | null>(null);
+    const [isPostLoading, setIsPostLoading] = useState(true);
+    const [postError, setPostError] = useState<string | null>(null);
+  
+    useEffect(() => {
+      
+      const fetchPosts = async () => {
+        try {
+          console.log("Fetching posts from API...");
+  
+          const API_URL = process.env.BACKEND_IP_ADDRESS || "http://192.168.8.101:5000"; // Your Flask backend URL
+  
+          const response = await fetch(`${API_URL}/api/posts/all`, {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          });
+  
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+  
+          const data = await response.json();
+          setAllPosts(data);
+  
+        } catch (error) {
+          setError("Error fetching posts");
+        }
+
+        finally {
+          setIsLoading(false);
+        }
+      };
+  
+  
+      fetchPosts();
+    }, []);
+
+
+    useEffect(() => {
+
+      const fetchPost = async (id: string) => {
+        try {
+          const API_URL = process.env.BACKEND_IP_ADDRESS || "http://192.168.8.101:5000";
+          const response = await fetch(`${API_URL}/api/posts/post/${id}`, {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log(data)
+          setPostDetails(data.post);
+          
+        } catch (error) {
+          setError("Error fetching single post");
+        }
+
+        finally {
+          setIsPostLoading(false);
+        }
+      }
+
+      fetchPost(id);
+
+    }, [id]);
 
   const handleAuthorProfilePress = (author_id: string) => {
     if (!author_id) return;
@@ -64,20 +108,23 @@ const SinglePost = () => {
       >
 
         {/* image section */}
-        <View className='w-full bg-zinc-300 rounded-xl h-[250px]'></View>
+        <View className='w-full rounded-xl h-[250px]'>
+          <Image
+            src={postDetails?.post_image_url || ""}
+            className='w-full h-full object-cover rounded-xl'
+          />
+        </View>
 
         {/* post content sections */}
         <View className='mt-5'>
-          <SectionTitle title_text='This is sample post template'/>
+          <SectionTitle title_text={postDetails?.post_title || "Untitled Post"} />
 
           <View style= {s.post_interaction}>
-            <Text>2025 Jan 23</Text>
+            <Text>{postDetails?.created_at.split("T")[0]}</Text>
             <Text>Like Button</Text>
           </View>
           
-          <Text className='mt-5 text-lg'>
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusamus vero quo iste sequi nulla libero, inventore odit ab dolorem nesciunt quam laudantium autem in quod eos quis ducimus exercitationem incidunt eaque est, excepturi, aut hic error. Dicta quasi, quas nihil tempora animi, nobis velit praesentium accusamus quae officia ut amet illum? Eum tempora laudantium dolor odit consequuntur ex officiis, repellat possimus. Itaque quibusdam, tenetur deleniti inventore velit quaerat laboriosam aliquid repellat sunt iure delectus suscipit sapiente veniam excepturi consequatur impedit! Quaerat, maxime rem. Omnis repellendus laboriosam doloremque mollitia, ab temporibus neque ad? Nobis eius hic expedita veniam iste voluptates at iure quis minus iusto corporis dolorum, cum, laudantium illum consequuntur, distinctio facilis! Cumque repellat ea doloremque laborum provident exercitationem fugiat eveniet facilis natus, temporibus magnam iusto. Dolores maxime sunt ullam quis harum voluptates, debitis ducimus corrupti omnis ratione, vitae rerum ipsa quos repellendus nihil incidunt voluptatem, dolorem iste. Dolore eos repellendus eaque. Aliquid sunt porro repellendus ex est voluptatem consequuntur praesentium officiis, modi explicabo laudantium! Quo hic cumque fuga at officiis repellendus repellat. Illo ratione excepturi, eum totam velit a fuga ipsum in! Consequuntur laudantium beatae autem voluptatibus illo sapiente repudiandae illum possimus eos, sed maxime distinctio, officia, deserunt labore.
-          </Text>
+          <Text className='mt-5 text-lg'>{postDetails?.post_content}</Text>
         </View>
 
         {/* publisher details */}
@@ -90,7 +137,7 @@ const SinglePost = () => {
         <View className='my-8'>
           <SmallTitle title_content='More Suggession' />
           <View className='mt-5'>
-            <PostVerticalScrollerSection posts={posts} />
+            <PostVerticalScrollerSection posts={allPosts ?? undefined} />
           </View>
         </View>
 

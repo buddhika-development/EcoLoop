@@ -4,7 +4,7 @@ import { Text, View } from 'react-native'
 const PostCardTitle = ({title_content, className} : {title_content : string, className ?: string}) => {
   return (
     <View>
-        <Text className={`font-bold text-[20px] ${className}`}>{title_content}</Text>
+        <Text className={`font-bold text-[20px] line-clamp-2 ${className}`}>{title_content}</Text>
     </View>
   )
 }

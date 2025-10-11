@@ -1,46 +1,51 @@
 import SmallTitle from "@/src/components/ui/Titles/SmallTitle";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import VerticalPostCard from "./VerticalPostCard";
 
 const PostsSection = () => {
-  const posts = [
-    {
-        post_id : "2000000",
-        title: "This is sample post title",
-        content:
-        "This is sample post content with the large text area and the post images and show the details about eco friendly and healthy life with less harmfull habits.",
-        image: "sakaboom.jpg",
-    },
-    {
-        post_id : "2000000",
-        title: "This is sample post title 2",
-        content:
-        "This is sample post content with the large text area and the post images and show the details about eco friendly and healthy life with less harmfull habits.",
-        image: "sakaboom.jpg",
-    },
-    {
-        post_id : "2000000",
-        title: "This is sample post title 3",
-        content:
-        "This is sample post content with the large text area and the post images and show the details about eco friendly and healthy life with less harmfull habits.",
-        image: "sakaboom.jpg",
-    },
-    {
-        post_id : "2000000",
-        title: "This is sample post title 4",
-        content:
-        "This is sample post content with the large text area and the post images and show the details about eco friendly and healthy life with less harmfull habits.",
-        image: "sakaboom.jpg",
-    },
-    {
-        post_id : "2000000",
-      title: "This is sample post title 5",
-      content:
-        "This is sample post content with the large text area and the post images and show the details about eco friendly and healthy life with less harmfull habits.",
-      image: "sakaboom.jpg",
-    },
-  ];
+  
+  const [searchQuery, setSearchQuery] = useState("");
+    const [isSearch, setIsSearch] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    // only store a simple error message string (easier to log and show in UI)
+    const [error, setError] = useState<string | null>(null);
+    // typed as an array or null while loading/not-loaded yet
+    const [allPosts, setAllPosts] = useState<any[] | null>(null);
+    const [searchPosts, setSearchPosts] = useState<any[] | null>(null);
+  
+    useEffect(() => {
+      
+      const fetchPosts = async () => {
+        try {
+          console.log("Fetching posts from API...");
+
+          const API_URL = process.env.BACKEND_IP_ADDRESS || "http://192.168.8.101:5000"; // Your Flask backend URL
+
+          const response = await fetch(`${API_URL}/api/posts/all`, {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          });
+  
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+  
+          const data = await response.json();
+          console.log("Posts fetched successfully:", data);
+          setAllPosts(data);
+  
+        } catch (error) {
+          setError("Error fetching posts");
+        }
+      };
+  
+  
+      fetchPosts();
+    }, []);
 
   return (
     <View className="mt-5">
@@ -48,12 +53,13 @@ const PostsSection = () => {
 
       {/* posts section */}
       <View>
-        {posts.map((post, index) => (
+        {allPosts?.map((post, index) => (
           <View key={index} className="border-b-[1px] border-zinc-200 py-3">
             <VerticalPostCard
-                post_id={post.post_id}
-              post_title={post.title}
-              post_content={post.content}
+              post_id={post.post_id}
+              post_title={post.post_title}
+              post_content={post.post_content}
+              post_image={post.post_image_url}
             />
           </View>
         ))}
