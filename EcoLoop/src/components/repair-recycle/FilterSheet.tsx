@@ -1,20 +1,39 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Modal, View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { colors } from "../../theme/colors";
 import { CATEGORIES } from "../../features/repair-recycle/categories";
 
+type FilterState = {
+  type: "repair"|"recycle"|"both";
+  categories: string[];
+  rating_gte?: number;
+  openNow?: boolean;
+};
+
 type Props = {
   visible: boolean;
   onClose: ()=>void;
-  initial: { type: "repair"|"recycle"|"both"; categories: string[]; rating_gte?: number; openNow?: boolean };
-  onApply: (v: Props["initial"])=>void;
+  initial: FilterState;
+  onApply: (v: FilterState)=>void;
 };
+
+const DEFAULTS: FilterState = { type: "both", categories: [], rating_gte: 0, openNow: false };
 
 export default function FilterSheet({ visible, onClose, initial, onApply }: Props){
   const [type, setType] = useState(initial.type);
   const [selected, setSelected] = useState<string[]>(initial.categories || []);
   const [openNow, setOpenNow] = useState(!!initial.openNow);
   const [rating, setRating] = useState(initial.rating_gte ?? 0);
+
+  // Sync local state every time the sheet opens with new initial
+  useEffect(() => {
+    if (visible) {
+      setType(initial.type);
+      setSelected(initial.categories || []);
+      setOpenNow(!!initial.openNow);
+      setRating(initial.rating_gte ?? 0);
+    }
+  }, [visible, initial]);
 
   const options = useMemo(()=>{
     if (type === "both") return [...CATEGORIES.repair, ...CATEGORIES.recycle];
@@ -27,6 +46,17 @@ export default function FilterSheet({ visible, onClose, initial, onApply }: Prop
 
   const apply = () => onApply({ type, categories: selected, rating_gte: rating, openNow });
 
+  const reset = () => {
+    // Clear UI state
+    setType("both");
+    setSelected([]);
+    setOpenNow(false);
+    setRating(0);
+    // ⬇️ Apply immediately and close
+    onApply(DEFAULTS);
+    onClose();
+  };
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={s.overlay}>
@@ -37,7 +67,6 @@ export default function FilterSheet({ visible, onClose, initial, onApply }: Prop
           </View>
 
           <ScrollView contentContainerStyle={{ paddingBottom: 16 }}>
-
             <Text style={s.label}>Shop Type</Text>
             <View style={s.row}>
               {(["repair","recycle","both"] as const).map(v=>(
@@ -49,9 +78,18 @@ export default function FilterSheet({ visible, onClose, initial, onApply }: Prop
 
             <Text style={s.label}>Categories</Text>
             <View style={s.wrap}>
-              {options.map(({ key, label, Icon, color })=>(
-                <TouchableOpacity key={key} onPress={()=>toggle(key)} style={[s.pill, selected.includes(key) && { backgroundColor: color + "22", borderColor: color }]}>
-                  <Icon name="tag" size={14} color={color} />
+              {options.map(({ key, label, Icon, iconName, color })=>(
+                <TouchableOpacity
+                  key={key}
+                  onPress={()=>toggle(key)}
+                  style={[
+                    s.pill,
+                    selected.includes(key) && { backgroundColor: color + "22", borderColor: color }
+                  ]}
+                >
+                  {/* use the iconName from categories.ts */}
+                  {/* @ts-ignore */}
+                  <Icon name={iconName} size={14} color={color} />
                   <Text style={s.pillText}>{label}</Text>
                 </TouchableOpacity>
               ))}
@@ -69,11 +107,10 @@ export default function FilterSheet({ visible, onClose, initial, onApply }: Prop
               ))}
               <TouchableOpacity onPress={()=>setRating(0)} style={s.chip}><Text style={s.chipText}>Any Rating</Text></TouchableOpacity>
             </View>
-
           </ScrollView>
 
           <View style={s.footer}>
-            <TouchableOpacity onPress={()=>{ setType("both"); setSelected([]); setOpenNow(false); setRating(0); }} style={s.btnOutline}>
+            <TouchableOpacity onPress={reset} style={s.btnOutline}>
               <Text style={[s.btnText, { color: colors.brand.primary }]}>Reset</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={apply} style={s.btnPrimary}>
