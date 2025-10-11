@@ -1,19 +1,117 @@
-import { useMemo, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Pressable } from "react-native";
+import { useMemo, useState, useEffect } from "react";
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Pressable, Modal,  FlatList, ActivityIndicator, Alert, } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { db } from "@/src/lib/firebase";
+import { collection, query, where, orderBy, getDocs, addDoc, doc, serverTimestamp, } from "firebase/firestore";
+import { useUserProfile } from "@/src/hooks/useUserProfile";
+
+type ListingType = "sell" | "donate";
+
+type MyItem = {
+  id: string;
+  ownerUid: string;
+  model?: string;
+  name?: string;
+  brand?: string;
+};
 
 export default function NewListing() {
 
-    const [model, setModel] = useState("");
+   const { user } = useUserProfile();
+
+   const [items, setItems] = useState<MyItem[]>([]);
+   const [loadingItems, setLoadingItems] = useState(true);
+  
+   const [pickerOpen, setPickerOpen] = useState(false);
+   const [selectedItemId, setSelectedItemId] = useState<string>("");
+
+    // const [model, setModel] = useState("");
     const [action, setAction] = useState<"sell" | "donate">("sell");
     const [price, setPrice] = useState("");
     const isDonate = action === "donate";
     const priceDisplay = useMemo(() => (isDonate ? "FREE" : price), [isDonate, price]);
 
+  useEffect(() => {
+    if (!user?.uid) {
+      setItems([]);
+      setLoadingItems(false);
+      return;
+    }
+    (async () => {
+      try {
+        const q = query(
+          collection(db, "items"),
+          where("ownerUid", "==", user.uid),
+          orderBy("model", "asc")
+        );
+        const snap = await getDocs(q);
+        const mine = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) })) as MyItem[];
+        setItems(mine);
+      } catch (e: any) {
+        console.error(e);
+        Alert.alert("Error", e?.message ?? "Failed to load your items.");
+      } finally {
+        setLoadingItems(false);
+      }
+    })();
+  }, [user?.uid]);
+
+  const selectedItem = useMemo(
+    () => items.find((i) => i.id === selectedItemId) || null,
+    [items, selectedItemId]
+  );
+
+  const onAdd = async () => {
+    if (!user?.uid) {
+      Alert.alert("Not signed in", "Please sign in to add a listing.");
+      return;
+    }
+    if (!selectedItemId) {
+      Alert.alert("Select model", "Please choose a model number from the list.");
+      return;
+    }
+    if (action === "sell") {
+      const n = Number(price);
+      if (!price || Number.isNaN(n) || n <= 0) {
+        Alert.alert("Invalid price", "Enter a valid price greater than 0.");
+        return;
+      }
+    }
+
+    try {
+      const itemRef = doc(db, "items", selectedItemId);
+      console.log("Creating listing payload →", {
+        ownerUid: user?.uid,
+        itemRef: `items/${selectedItemId}`,
+        type: action,
+        price: action === "donate" ? null : Number(price),
+        status: "active"
+      });
+
+      await addDoc(collection(db, "listings"), {
+        ownerUid: user.uid,
+        itemRef,
+        type: action,
+        price: action === "donate" ? null : Number(price),
+        status: "active",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      Alert.alert(
+        "Success",
+        action === "donate" ? "Donation listing created." : "Selling listing created.",
+        [{ text: "OK", onPress: () => router.back() }]
+      );
+    } catch (e: any) {
+      console.error(e);
+      Alert.alert("Error", e?.message ?? "Failed to create listing.");
+    }
+  };
 
     return (
-        <KeyboardAvoidingView
+    <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       className="flex-1 bg-white"
     >
@@ -30,8 +128,7 @@ export default function NewListing() {
           Add Item To{"\n"}Sell/Donate
         </Text>
 
-        {/* Model number */}
-        <View className="mt-6">
+        {/* <View className="mt-6">
           <Text className="text-xs text-gray-500 mb-2">Model Number</Text>
           <TextInput
             className="h-11 rounded-xl px-4 border border-gray-200 bg-gray-50"
@@ -39,7 +136,67 @@ export default function NewListing() {
             value={model}
             onChangeText={setModel}
           />
+        </View> */}
+
+        {/* 🔸 CHANGED: Model number → dropdown */}
+        <View className="mt-6">
+          <Text className="text-xs text-gray-500 mb-2">Model Number</Text>
+
+          <Pressable
+            onPress={() => setPickerOpen(true)}
+            className="h-11 rounded-xl px-4 border border-gray-200 bg-gray-50 justify-center"
+          >
+            <Text className={selectedItem ? "text-gray-900" : "text-gray-400"}>
+              {selectedItem
+                ? `${selectedItem.model ?? "Unknown model"}${
+                    selectedItem.name ? ` • ${selectedItem.name}` : ""
+                  }`
+                : loadingItems
+                ? "Loading..."
+                : "Select your model"}
+            </Text>
+          </Pressable>
+
+          {/* 🔹 ADDED modal picker */}
+          <Modal visible={pickerOpen} animationType="slide" onRequestClose={() => setPickerOpen(false)}>
+            <View className="flex-1 bg-white">
+              <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
+                <TouchableOpacity onPress={() => setPickerOpen(false)}>
+                  <Text className="text-lg">✕</Text>
+                </TouchableOpacity>
+                <Text className="flex-1 text-center font-semibold text-lg">Choose Model</Text>
+                <View style={{ width: 24 }} />
+              </View>
+
+              {loadingItems ? (
+                <View className="flex-1 items-center justify-center">
+                  <ActivityIndicator />
+                </View>
+              ) : (
+                <FlatList
+                  data={items}
+                  keyExtractor={(it) => it.id}
+                  ItemSeparatorComponent={() => <View className="h-[1px] bg-gray-100" />}
+                  renderItem={({ item }) => (
+                    <Pressable
+                      onPress={() => {
+                        setSelectedItemId(item.id);
+                        setPickerOpen(false);
+                      }}
+                      className="px-4 py-3"
+                    >
+                      <Text className="font-semibold">{item.model ?? "Unknown model"}</Text>
+                      <Text className="text-gray-500 mt-0.5">
+                        {item.name ?? item.brand ?? "Item"} • #{item.id.slice(0, 6)}
+                      </Text>
+                    </Pressable>
+                  )}
+                />
+              )}
+            </View>
+          </Modal>
         </View>
+
 
         {/* Choose Action */}
         <View className="mt-6">
@@ -85,7 +242,7 @@ export default function NewListing() {
         {/* Add button (UI only) */}
         <TouchableOpacity
           className="mt-6 h-12 rounded-xl items-center justify-center bg-green-600"
-          onPress={() => {/* UI only; connect later */}}
+          onPress={onAdd}
         >
           <Text className="text-white font-semibold">Add</Text>
         </TouchableOpacity>

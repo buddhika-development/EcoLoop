@@ -1,8 +1,55 @@
-import React, { useMemo, useState } from "react";
-import { View, Text, SafeAreaView, TextInput, FlatList, TouchableOpacity, Image, Pressable } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, SafeAreaView, TextInput, FlatList, TouchableOpacity, Image, Pressable, ActivityIndicator } from "react-native";
 import { Ionicons, MaterialIcons, Feather } from "@expo/vector-icons";
 import { cssInterop } from "nativewind";
 import { router } from "expo-router";
+import { collection, onSnapshot, query as qf, where, getDoc, DocumentReference, doc, getDocs } from "firebase/firestore";
+import { db } from "@/src/lib/firebase";
+
+
+async function fetchItemDocFlexible(itemRef: any) {
+  // 1) Try the reference directly
+  try {
+    if (itemRef) {
+      const snap = await getDoc(itemRef as DocumentReference);
+      if (snap.exists()) return { id: snap.id, ...(snap.data() as any) };
+    }
+  } catch {}
+
+  // 2) Try by ref.id (e.g., "item_001")
+  try {
+    const refId = (itemRef as any)?.id;
+    if (refId) {
+      // first attempt: assume doc id == refId
+      const direct = await getDoc(doc(db, "items", String(refId)));
+      if (direct.exists()) return { id: direct.id, ...(direct.data() as any) };
+
+      // second attempt: query by field { id: refId }
+      const itemsCol = collection(db, "items");
+      const q = qf(itemsCol, where("id", "==", String(refId)));
+      const qs = await getDocs(q);
+      if (!qs.empty) {
+        const first = qs.docs[0];
+        return { id: first.id, ...(first.data() as any) };
+      }
+    }
+  } catch {}
+
+  // 3) If someone saved a string path, support it: "/items/item_001" or "items/item_001"
+  try {
+    if (typeof itemRef === "string") {
+      const path = itemRef.replace(/^\//, "");
+      const [col, docId] = path.split("/");
+      if (col === "items" && docId) {
+        const snap = await getDoc(doc(db, "items", docId));
+        if (snap.exists()) return { id: snap.id, ...(snap.data() as any) };
+      }
+    }
+  } catch {}
+
+  return null;
+}
+
 
 const I = cssInterop(Ionicons, {
   className: { target: "style", nativeStyleToProp: { color: "color", fontSize: "size" } },
@@ -15,6 +62,27 @@ const F = cssInterop(Feather, {
 });
 
 type Tab = "sell" | "donate";
+
+type ListingDoc = {
+  ownerUid: string;
+  itemRef: DocumentReference;
+  type: "sell" | "donate";
+  price: number | null;
+  status: "active" | "inactive";
+  createdAt?: any;
+  updatedAt?: any;
+};
+
+type ItemDoc = {
+  id?: string;
+  name?: string;
+  model?: string;
+  images?: string[];
+  purchaseDate?: string; 
+  yearsUsed?: number;    
+  rating?: number;       
+};
+
 type Item = {
   id: string;
   title: string;
@@ -22,18 +90,46 @@ type Item = {
   price: number;
   rating: number; // 0..5
   type: Tab;
+  imageUrl?: string;
 };
+
 type SegmentedProps = { value: Tab; onChange: (v: Tab) => void };
 type ProductCardProps = { item: Item };
 
-const ITEMS: Item[] = [
-  { id: "1", title: "Singer Television", yearsUsed: 4, price: 9000, rating: 4, type: "sell" },
-  { id: "2", title: "Microwave Oven", yearsUsed: 3, price: 3000, rating: 5, type: "sell" },
-  { id: "3", title: "Damro Wardrobe", yearsUsed: 5, price: 4500, rating: 4, type: "sell" },
-  { id: "4", title: "HP Probook", yearsUsed: 2, price: 275000, rating: 5, type: "sell" },
-  { id: "5", title: "Study Table", yearsUsed: 2, price: 0, rating: 4, type: "donate" },
-  { id: "6", title: "Kids Bicycle", yearsUsed: 1, price: 0, rating: 5, type: "donate" },
-];
+function yearsSince(dateStr?: string): number {
+  if (!dateStr) return 0;
+  const [y, m, d] = dateStr.split("-").map((n) => parseInt(n, 10));
+  if (!y || !m || !d) return 0;
+  const start = new Date(y, m - 1, d).getTime();
+  const now = Date.now();
+  const diffYears = (now - start) / (1000 * 60 * 60 * 24 * 365.25);
+  return Math.max(0, Math.floor(diffYears));
+}
+
+function getItemDocIdFromRef(ref: any): string | null {
+  if (ref?.id) return String(ref.id);
+  if (typeof ref === "string") {
+    const path = ref.replace(/^\//, "");
+    const [col, docId] = path.split("/");
+    if (col === "items" && docId) return docId;
+  }
+  return null;
+}
+
+function toCardItem(listingId: string, listing: ListingDoc, item: ItemDoc & { id?: string }) {
+  const itemId = item.id || getItemDocIdFromRef(listing.itemRef) || listingId; // fallback
+  return {
+    id: itemId,            // 👈 now this is the *item* ID
+    listingId,             // keep if you still need it
+    title: item.name ?? item.model ?? "Untitled",
+    yearsUsed: item.yearsUsed ?? yearsSince(item.purchaseDate),
+    price: listing.type === "donate" ? 0 : (listing.price ?? 0),
+    rating: item.rating ?? 0,
+    type: listing.type,
+    imageUrl: item.images?.[0],
+  };
+}
+
 
 function Segmented({ value, onChange }: SegmentedProps) {
   return (
@@ -64,14 +160,25 @@ function Segmented({ value, onChange }: SegmentedProps) {
 
 function ProductCard({ item }: ProductCardProps) {
   return (
-    <View className="w-[48%] bg-surface border border-surface-foreground rounded-2xl p-4 mr-3 mb-4">
-      <View className="h-[110px] rounded-xl items-center justify-center mb-3 bg-surface-subtle">
-        <F name="image" size={32} className="text-text-hint" />
+    <Pressable 
+     onPress={() => router.push(`/(app)/(tabs)/donate-sell/listing/${item.id}`)}
+     className="w-[48%] bg-surface border border-surface-foreground rounded-2xl p-4 mr-3 mb-4">
+      <View className="h-[110px] rounded-xl items-center justify-center mb-3 bg-surface-subtle overflow-hidden">
+        {item.imageUrl ? (
+          <Image
+            source={{ uri: item.imageUrl }}
+            style={{ width: "100%", height: "100%", borderRadius: 12 }}
+            resizeMode="cover"
+          />
+        ) : (
+          <F name="image" size={32} className="text-text-hint" />
+        )}
       </View>
 
       <Text numberOfLines={1} className="font-semibold text-text">
         {item.title}
       </Text>
+
       <Text className="text-xs text-text-hint">
         Used {item.yearsUsed} {item.yearsUsed === 1 ? "year" : "years"}
       </Text>
@@ -98,25 +205,76 @@ function ProductCard({ item }: ProductCardProps) {
           </Text>
         ))}
       </View>
-    </View>
+    </Pressable>
   );
 }
 
 export default function DonateSell() {
 
     const [tab, setTab] = useState<Tab>("sell");         
-    const [query, setQuery] = useState<string>("");
+    const [items, setItems] = useState<Item[]>([]);
+    const [loading, setLoading] = useState(true);
+    
 
-    const data = useMemo<Item[]>(() => {
-    const q = query.trim().toLowerCase();
-    return ITEMS.filter(
-      (it) => it.type === tab && (q.length === 0 || it.title.toLowerCase().includes(q))
-    );
-    }, [tab, query]);
+    useEffect(() => {
+  setLoading(true);
+
+  const ref = collection(db, "listings");
+  const q = qf(ref, where("status", "==", "active"), where("type", "==", tab));
+
+  const unsub = onSnapshot(
+    q,
+    async (snap) => {
+      try {
+        const sorted = [...snap.docs].sort((a, b) => {
+          const ta = a.data()?.createdAt?.toMillis?.() ?? 0;
+          const tb = b.data()?.createdAt?.toMillis?.() ?? 0;
+          return tb - ta;
+        });
+
+        const joined = await Promise.all(
+          sorted.map(async (d, idx) => {
+            const listing = d.data() as ListingDoc;
+
+            // DEBUG: show raw listing + hint
+            console.log(`[#${idx}] listing ${d.id} → type=${listing.type}, price=${listing.price}`);
+
+            // Flexible fetch that covers all cases described above
+            let itemData = await fetchItemDocFlexible(listing.itemRef);
+
+            if (!itemData) {
+              console.warn(`⚠️ Item not found for listing ${d.id}. itemRef=`, listing.itemRef);
+              // keep a minimal card so UI stays stable
+              return toCardItem(d.id, listing, { id: "unknown" });
+            }
+
+            // DEBUG: show what we got
+            console.log(`[#${idx}] itemData keys:`, Object.keys(itemData));
+
+            return toCardItem(d.id, listing, itemData as ItemDoc);
+          })
+        );
+
+        console.log("✅ Final joined rows (first 3):", joined.slice(0, 3));
+        setItems(joined);
+      } catch (e) {
+        console.log("🔥 join error:", e);
+      } finally {
+        setLoading(false);
+      }
+    },
+    (err) => {
+      console.log("🔥 listings feed error:", err);
+      setLoading(false);
+    }
+  );
+
+  return () => unsub();
+}, [tab]);
+
 
     return (
       <SafeAreaView className="flex-1 bg-surface-subtle">
-      {/* Header */}
       <View className="flex-row items-center justify-between px-4 pt-2 pb-3 bg-surface">
         <View className="flex-row items-center">
           <View>
@@ -127,7 +285,7 @@ export default function DonateSell() {
 
         <TouchableOpacity 
         className="px-3 py-2 rounded-2xl bg-brand-primary"
-        onPress={() => router.push("/(app)/donate-sell/new")}>
+        onPress={() => router.push("/(app)/(tabs)/donate-sell/new")}>
           <I name="add" size={20} className="text-text-inverse" />
         </TouchableOpacity>
       </View>
@@ -141,22 +299,34 @@ export default function DonateSell() {
           <I name="search" size={18} className="text-text-hint" />
           <TextInput
             placeholder="Tell us your need..."
-            placeholderTextColor="#787F8D"  // text.hint from your config
-            value={query}
-            onChangeText={setQuery}
+            placeholderTextColor="#787F8D"  
             className="flex-1 ml-2 text-text"
           />
         </View>
 
         {/* Grid */}
-        <FlatList
-          data={data}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <ProductCard item={item} />}
-          numColumns={2}
-          contentContainerStyle={{ paddingTop: 16, paddingBottom: 110 }}
-          showsVerticalScrollIndicator={false}
-        />
+        {loading ? (
+          <View className="mt-6 items-center">
+            <ActivityIndicator />
+            <Text className="mt-2 text-text-hint">Loading items…</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={items}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <ProductCard item={item} />}
+            numColumns={2}
+            contentContainerStyle={{ paddingTop: 16, paddingBottom: 110 }}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View className="py-16 items-center">
+                <Text className="text-text-hint">
+                  No {tab === "sell" ? "selling" : "donation"} items yet.
+                </Text>
+              </View>
+            }
+          />
+        )}
       </View>
 
       
@@ -164,3 +334,4 @@ export default function DonateSell() {
     </SafeAreaView>
     );
 }
+
