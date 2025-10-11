@@ -48,7 +48,7 @@ export default function EducationHub() {
 
             {/* content area */}
             <View className="mt-5">
-                
+                <Text className="text-text text-[16px]">No content available.</Text>
             </View>
             
             </ScrollView>
