@@ -38,22 +38,20 @@ const ITEMS: Item[] = [
 function Segmented({ value, onChange }: SegmentedProps) {
   return (
     <View className="flex-row rounded-full p-1 bg-surface-subtle border border-surface-foreground ">
-      { (["sell", "donate"] as Tab[]).map((key) => { 
+      {(["sell", "donate"] as Tab[]).map((key) => {
         const active = value === key;
         return (
           <Pressable
             key={key}
-            onPress={() => onChange(key)}    
-            className={`flex-1 items-center py-2 rounded-full ${
-              active ? "bg-brand-primary" : "bg-surface-subtle"
-            }`}
+            onPress={() => onChange(key)}
+            className={`flex-1 items-center py-2 rounded-full ${active ? "bg-brand-primary" : "bg-surface-subtle"
+              }`}
           >
             <Text
-              className={`font-semibold ${
-                active ? "text-text-inverse" : "text-text-hint"
-              }`}
+              className={`font-semibold ${active ? "text-text-inverse" : "text-text-hint"
+                }`}
             >
-             {key === "sell" ? "Sell" : "Donate"} 
+              {key === "sell" ? "Sell" : "Donate"}
             </Text>
           </Pressable>
         );
@@ -90,9 +88,8 @@ function ProductCard({ item }: ProductCardProps) {
         {Array.from({ length: 5 }).map((_, i) => (
           <Text
             key={i}
-            className={`text-xs mr-1 ${
-              i < item.rating ? "text-amber-500" : "text-surface-foreground"
-            }`}
+            className={`text-xs mr-1 ${i < item.rating ? "text-amber-500" : "text-surface-foreground"
+              }`}
           >
             ★
           </Text>
@@ -104,18 +101,18 @@ function ProductCard({ item }: ProductCardProps) {
 
 export default function DonateSell() {
 
-    const [tab, setTab] = useState<Tab>("sell");         
-    const [query, setQuery] = useState<string>("");
+  const [tab, setTab] = useState<Tab>("sell");
+  const [query, setQuery] = useState<string>("");
 
-    const data = useMemo<Item[]>(() => {
+  const data = useMemo<Item[]>(() => {
     const q = query.trim().toLowerCase();
     return ITEMS.filter(
       (it) => it.type === tab && (q.length === 0 || it.title.toLowerCase().includes(q))
     );
-    }, [tab, query]);
+  }, [tab, query]);
 
-    return (
-      <SafeAreaView className="flex-1 bg-surface-subtle">
+  return (
+    <SafeAreaView className="flex-1 bg-surface-subtle">
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 pt-2 pb-3 bg-surface">
         <View className="flex-row items-center">
@@ -125,9 +122,9 @@ export default function DonateSell() {
           </View>
         </View>
 
-        <TouchableOpacity 
-        className="px-3 py-2 rounded-2xl bg-brand-primary"
-        onPress={() => router.push("/(app)/donate-sell/new")}>
+        <TouchableOpacity
+          className="px-3 py-2 rounded-2xl bg-brand-primary"
+          onPress={() => router.push("/(app)/(tabs)/donate-sell/new")}>
           <I name="add" size={20} className="text-text-inverse" />
         </TouchableOpacity>
       </View>
@@ -159,8 +156,8 @@ export default function DonateSell() {
         />
       </View>
 
-      
+
 
     </SafeAreaView>
-    );
+  );
 }

@@ -8,6 +8,11 @@ import Header from "@/src/components/Header";
 import FabChatbot from "@/src/components/FabChatbot";
 import { colors } from "@/src/theme/colors";
 
+type TabBarIconProps = {
+    size: number;
+    color: string;
+};
+
 export default function TabsLayout() {
     const insets = useSafeAreaInsets();
 
@@ -45,21 +50,21 @@ export default function TabsLayout() {
                         name="home"
                         options={{
                             title: "Home",
-                            tabBarIcon: ({ size, color }) => <Ionicons name="home" size={size} color={color} />,
+                            tabBarIcon: ({ size, color }: TabBarIconProps) => <Ionicons name="home" size={size} color={color} />,
                         }}
                     />
                     <Tabs.Screen
                         name="repair-recycle"
                         options={{
                             title: "Repair",
-                            tabBarIcon: ({ size, color }) => <Ionicons name="build" size={size} color={color} />,
+                            tabBarIcon: ({ size, color }: TabBarIconProps) => <Ionicons name="build" size={size} color={color} />,
                         }}
                     />
                     <Tabs.Screen
                         name="donate-sell"
                         options={{
                             title: "Donate",
-                            tabBarIcon: ({ size, color }) => (
+                            tabBarIcon: ({ size, color }: TabBarIconProps) => (
                                 <Ionicons name="swap-horizontal" size={size} color={color} />
                             ),
                         }}
@@ -68,7 +73,7 @@ export default function TabsLayout() {
                         name="lifecycle"
                         options={{
                             title: "Lifecycle",
-                            tabBarIcon: ({ size, color }) => (
+                            tabBarIcon: ({ size, color }: TabBarIconProps) => (
                                 <Ionicons name="analytics" size={size} color={color} />
                             ),
                         }}
@@ -77,7 +82,7 @@ export default function TabsLayout() {
                         name="education-hub"
                         options={{
                             title: "Education",
-                            tabBarIcon: ({ size, color }) => <Ionicons name="book" size={size} color={color} />,
+                            tabBarIcon: ({ size, color }: TabBarIconProps) => <Ionicons name="book" size={size} color={color} />,
                         }}
                     />
                 </Tabs>
