@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Pressable, Modal,  FlatList, ActivityIndicator, Alert, } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Pressable, Modal, FlatList, ActivityIndicator, Alert, } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { db } from "@/src/lib/firebase";
 import { collection, query, where, orderBy, getDocs, addDoc, doc, serverTimestamp, } from "firebase/firestore";
 import { useUserProfile } from "@/src/hooks/useUserProfile";
@@ -18,19 +18,22 @@ type MyItem = {
 
 export default function NewListing() {
 
-   const { user } = useUserProfile();
+  const { user } = useUserProfile();
 
-   const [items, setItems] = useState<MyItem[]>([]);
-   const [loadingItems, setLoadingItems] = useState(true);
-  
-   const [pickerOpen, setPickerOpen] = useState(false);
-   const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const [items, setItems] = useState<MyItem[]>([]);
+  const [loadingItems, setLoadingItems] = useState(true);
 
-    // const [model, setModel] = useState("");
-    const [action, setAction] = useState<"sell" | "donate">("sell");
-    const [price, setPrice] = useState("");
-    const isDonate = action === "donate";
-    const priceDisplay = useMemo(() => (isDonate ? "FREE" : price), [isDonate, price]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState<string>("");
+
+  // const [model, setModel] = useState("");
+  const [action, setAction] = useState<"sell" | "donate">("sell");
+  const [price, setPrice] = useState("");
+  const isDonate = action === "donate";
+  const priceDisplay = useMemo(() => (isDonate ? "FREE" : price), [isDonate, price]);
+
+  const params = useLocalSearchParams<{ itemId?: string }>();
+
 
   useEffect(() => {
     if (!user?.uid) {
@@ -38,6 +41,11 @@ export default function NewListing() {
       setLoadingItems(false);
       return;
     }
+
+    if (typeof params.itemId === "string" && params.itemId) {
+      setSelectedItemId(params.itemId);
+    }
+
     (async () => {
       try {
         const q = query(
@@ -55,7 +63,7 @@ export default function NewListing() {
         setLoadingItems(false);
       }
     })();
-  }, [user?.uid]);
+  }, [user?.uid, params.itemId]);
 
   const selectedItem = useMemo(
     () => items.find((i) => i.id === selectedItemId) || null,
@@ -110,7 +118,7 @@ export default function NewListing() {
     }
   };
 
-    return (
+  return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       className="flex-1 bg-white"
@@ -148,12 +156,11 @@ export default function NewListing() {
           >
             <Text className={selectedItem ? "text-gray-900" : "text-gray-400"}>
               {selectedItem
-                ? `${selectedItem.model ?? "Unknown model"}${
-                    selectedItem.name ? ` • ${selectedItem.name}` : ""
-                  }`
+                ? `${selectedItem.model ?? "Unknown model"}${selectedItem.name ? ` • ${selectedItem.name}` : ""
+                }`
                 : loadingItems
-                ? "Loading..."
-                : "Select your model"}
+                  ? "Loading..."
+                  : "Select your model"}
             </Text>
           </Pressable>
 
@@ -219,9 +226,8 @@ export default function NewListing() {
         <View className="mt-6">
           <Text className="text-xs text-gray-500 mb-2">Price</Text>
           <TextInput
-            className={`h-11 rounded-xl px-4 border ${
-              isDonate ? "border-gray-200 bg-gray-50" : "border-gray-200 bg-white"
-            }`}
+            className={`h-11 rounded-xl px-4 border ${isDonate ? "border-gray-200 bg-gray-50" : "border-gray-200 bg-white"
+              }`}
             placeholder="Enter price"
             keyboardType="numeric"
             value={priceDisplay}
@@ -233,7 +239,7 @@ export default function NewListing() {
         {/* Scan QR hint */}
         <TouchableOpacity
           className="mt-4 flex-row items-center"
-          onPress={() => {/* UI only; hook up later */}}
+          onPress={() => { router.push("/(app)/(tabs)/lifecycle/item/scan"); }}
         >
           <MaterialIcons name="qr-code-scanner" size={18} />
           <Text className="ml-2 text-xs text-gray-600">Scan QR to prefill (optional)</Text>
@@ -248,7 +254,7 @@ export default function NewListing() {
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
-    );
+  );
 }
 
 function SegmentButton({
@@ -263,9 +269,8 @@ function SegmentButton({
   return (
     <TouchableOpacity
       onPress={onPress}
-      className={`px-5 h-10 rounded-full border ${
-        active ? "bg-purple-600 border-purple-600" : "bg-[#DBDBEC] border-gray-300"
-      } items-center justify-center`}
+      className={`px-5 h-10 rounded-full border ${active ? "bg-purple-600 border-purple-600" : "bg-[#DBDBEC] border-gray-300"
+        } items-center justify-center`}
     >
       <Text className={`font-medium ${active ? "text-white" : "text-gray-700"}`}>{label}</Text>
     </TouchableOpacity>
@@ -290,9 +295,8 @@ function Radio({
     >
       {/* outer circle */}
       <View
-        className={`h-5 w-5 rounded-full border mr-2 items-center justify-center ${
-          checked ? "border-purple-600" : "border-gray-400"
-        }`}
+        className={`h-5 w-5 rounded-full border mr-2 items-center justify-center ${checked ? "border-purple-600" : "border-gray-400"
+          }`}
       >
         {/* inner dot */}
         {checked ? <View className="h-2.5 w-2.5 rounded-full bg-purple-600" /> : null}
