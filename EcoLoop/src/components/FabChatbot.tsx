@@ -1,9 +1,17 @@
-import { TouchableOpacity, View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../theme/colors";
 
-export default function FabChatbot({ onPress }: { onPress: () => void }) {
+export default function FabChatbot() {
+
+    const router = useRouter()
+    
+    const onPress = () => {
+        router.push(`/(app)/(tabs)/education-hub/(chat)/ChatInterface`)
+    }
+    
     const insets = useSafeAreaInsets();
     return (
         <View style={[styles.wrap, { bottom: (insets.bottom || 0) + 72 }]}>

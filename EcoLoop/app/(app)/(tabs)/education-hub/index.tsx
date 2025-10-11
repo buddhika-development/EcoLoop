@@ -1,20 +1,64 @@
-import SectionTitle from "@/components/ui/Titles/SectionTitle";
+import PostsSection from "@/src/components/layouts/EducationHub/PostsSection";
+import PostVerticalScrollerSection from "@/src/components/layouts/EducationHub/PostVerticalScrollerSection";
+import SectionTitle from "@/src/components/ui/Titles/SectionTitle";
+import SmallTitle from "@/src/components/ui/Titles/SmallTitle";
 import { useState } from "react";
-import { ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+// sample data
+const posts = [
+    {
+        post_id : "2000000",
+        title: "This is sample post title",
+        content:
+        "This is sample post content with the large text area and the post images and show the details about eco friendly and healthy life with less harmfull habits.",
+        image: "sakaboom.jpg",
+    },
+    {
+        post_id : "2000000",
+        title: "This is sample post title 2",
+        content:
+        "This is sample post content with the large text area and the post images and show the details about eco friendly and healthy life with less harmfull habits.",
+        image: "sakaboom.jpg",
+    },
+    {
+        post_id : "2000000",
+        title: "This is sample post title 3",
+        content:
+        "This is sample post content with the large text area and the post images and show the details about eco friendly and healthy life with less harmfull habits.",
+        image: "sakaboom.jpg",
+    },
+    {
+        post_id : "2000000",
+        title: "This is sample post title 4",
+        content:
+        "This is sample post content with the large text area and the post images and show the details about eco friendly and healthy life with less harmfull habits.",
+        image: "sakaboom.jpg",
+    },
+    {
+        post_id : "2000000",
+      title: "This is sample post title 5",
+      content:
+        "This is sample post content with the large text area and the post images and show the details about eco friendly and healthy life with less harmfull habits.",
+      image: "sakaboom.jpg",
+    },
+  ];
 
 
 export default function EducationHub() {
 
     const [searchQuery, setSearchQuery] = useState("");
+    const [isSearch, setIsSearch] = useState(false)
+    const [allPosts, setAllPosts] = useState()
+    const [searchPosts, setSearchPosts] = useState() 
 
     const handleSubmit = () => {
         if (searchQuery.trim() !== "") {
-            // Handle the search logic here
-            alert("Searching for:" + searchQuery);
+            setIsSearch(true)
         }
         else {
-            alert("Search query is empty.");
+            setIsSearch(false)
         }
     }
     
@@ -48,6 +92,24 @@ export default function EducationHub() {
 
             {/* content area */}
             <View className="mt-5">
+
+                {
+                    isSearch ? (
+                        <View>
+                            <Text>This is serach text</Text>
+                        </View>
+                    ) : (
+                        <View>
+                            <View>
+                                <View style={s.header}>
+                                    <SmallTitle title_content='Recent Posts' />
+                                </View>
+                                <PostVerticalScrollerSection posts={posts} />
+                            </View>
+                            <PostsSection />
+                        </View>
+                    )
+                }
                 
             </View>
             
@@ -55,3 +117,12 @@ export default function EducationHub() {
         </SafeAreaView>
     );
 }
+
+const s = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16
+  }
+})
