@@ -2,12 +2,69 @@
 import { auth, db } from "@/src/lib/firebase";
 import {
     addDoc, collection, serverTimestamp, Timestamp,
-    updateDoc, doc, setDoc
+    updateDoc, doc, setDoc, arrayUnion,
+    deleteDoc
 } from "firebase/firestore";
 import { uploadLocalFile } from "@/src/services/storage";
 import { makeQrToken, tokenIndexId } from "@/src/lib/crypto";
 import type { WizardDraft } from "@/src/hooks/useAddItemWizard";
 import type { LocalFile } from "@/src/types/media";
+
+
+
+export async function deleteItem(itemId: string) {
+    const ref = doc(db, "items", itemId);
+    await deleteDoc(ref);
+}
+
+function addMonths(iso: string, months: number) {
+    const d = new Date(iso + "T00:00:00");
+    const nd = new Date(d);
+    nd.setMonth(nd.getMonth() + months);
+    if (nd.getDate() !== d.getDate()) nd.setDate(0);
+    return nd.toISOString().slice(0, 10);
+}
+
+export async function updateItemPartial(
+    itemId: string,
+    patch: Partial<{
+        model: string | null;
+        purchaseDate: string | null;       // YYYY-MM-DD
+        warrantyMonths: number | null;
+        warrantyExpiry: string | null;     // optional override
+        maintenance: any;                  // small patch (time, firstDate, enabled, etc.)
+    }>
+) {
+    // auto compute expiry if purchaseDate + months provided and no explicit override
+    if (
+        patch.purchaseDate &&
+        typeof patch.warrantyMonths === "number" &&
+        (patch.warrantyExpiry === undefined || patch.warrantyExpiry === null)
+    ) {
+        patch.warrantyExpiry =
+            patch.warrantyMonths > 0 ? addMonths(patch.purchaseDate, patch.warrantyMonths) : null;
+    }
+
+    await updateDoc(doc(db, "items", itemId), patch as any);
+}
+
+export async function addItemDocuments(itemId: string, files: LocalFile[]) {
+    const uid = auth.currentUser?.uid;
+    if (!uid) throw new Error("Not signed in");
+
+    const uploaded: string[] = [];
+    for (const f of files) {
+        const key = `users/${uid}/items/${itemId}/docs/${Date.now()}-${f.name}`;
+        const url = await uploadLocalFile(f, key);
+        uploaded.push(url);
+    }
+    if (uploaded.length) {
+        await updateDoc(doc(db, "items", itemId), {
+            documents: arrayUnion(...uploaded),
+        });
+    }
+}
+
 
 const toTs = (iso?: string) => (iso ? Timestamp.fromDate(new Date(iso + "T00:00:00")) : undefined);
 
@@ -69,7 +126,8 @@ export async function createItemFromWizard(draft: WizardDraft): Promise<CreatedI
     await updateDoc(docRef, {
         images: imageUrls,
         documents: docUrls,
-        qrToken,                 // store the token string on the item
+        qrCode: qrToken,                 // store the token string on the item
+        qrToken: qrToken,
         updatedAt: serverTimestamp(),
     });
 

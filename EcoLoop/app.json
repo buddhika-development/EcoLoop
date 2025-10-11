@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "EcoLoop needs camera access to scan item QR codes."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +28,8 @@
         "VIBRATE",
         "POST_NOTIFICATIONS",
         "VIBRATE",
-        "SCHEDULE_EXACT_ALARM"
+        "SCHEDULE_EXACT_ALARM",
+        "android.permission.CAMERA"
       ],
       "package": "com.anonymous.EcoLoop",
       "intentFilters": [
@@ -50,6 +54,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-camera",
       [
         "expo-notifications",
         {

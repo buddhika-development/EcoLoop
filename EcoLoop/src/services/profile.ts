@@ -86,6 +86,15 @@ export async function getMyProfile() {
     return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
+export async function getUserProfile({ userId }: { userId: string }) {
+    const uid = auth.currentUser?.uid;
+    if (!uid) throw new Error("Not signed in");
+    if (!userId) throw new Error("No userId provided");
+    if (userId === uid) return getMyProfile(); // optional optimization
+    const snap = await getDoc(doc(db, "users", userId));
+    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
 export async function updateMyProfile(partial: Partial<UserProfile>) {
     const uid = auth.currentUser?.uid;
     if (!uid) throw new Error("Not signed in");

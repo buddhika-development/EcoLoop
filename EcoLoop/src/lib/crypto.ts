@@ -36,6 +36,7 @@ export async function verifyAndParseToken(url: string):
         const d = u.searchParams.get("d");
         const s = u.searchParams.get("s");
         if (!d || !s) return null;
+
         const expect = await signPayloadHex(d);
         if (expect !== s) return null;
 
@@ -45,6 +46,19 @@ export async function verifyAndParseToken(url: string):
     } catch {
         return null;
     }
+}
+
+
+/** Backwards-compat: boolean verifier expected by older code */
+export async function verifyQrToken(url: string): Promise<boolean> {
+    return (await verifyAndParseToken(url)) !== null;
+}
+
+/** Convenience alias if you just want the payload (same as verifyAndParseToken) */
+export async function parseQrToken(
+    url: string
+): Promise<{ itemId: string; ownerUid: string } | null> {
+    return verifyAndParseToken(url);
 }
 
 /** Optional: anonymous id for public index docs (no raw token stored) */
