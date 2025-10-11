@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import { colors } from "@/src/theme/colors";
 import type { ShopView } from "@/src/features/repair-recycle/api";
 
@@ -26,11 +26,7 @@ export default function ShopCard({ shop, onPress }: Props) {
           <Image source={{ uri: shop.logoUrl }} style={s.logo} />
         ) : (
           <View style={[s.logoFallback, { backgroundColor: logoBg }]}>
-            <MaterialIcons
-              name={shop.type === "recycle" ? "recycling" : "home-repair-service"}
-              size={22}
-              color="#fff"
-            />
+            <FontAwesome5 name={shop.type === "recycle" ? "recycle" : "wrench"} size={22} color="#fff" />
           </View>
         )}
 

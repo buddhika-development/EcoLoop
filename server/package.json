@@ -8,6 +8,8 @@
     "dev": "nodemon src/index.js"
   },
   "dependencies": {
+    "@langchain/community": "^0.3.57",
+    "@langchain/google-genai": "^0.2.18",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
