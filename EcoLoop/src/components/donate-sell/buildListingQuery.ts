@@ -12,23 +12,19 @@ export function buildListingQuery(
   const constraints: QueryConstraint[] = [
     where("status", "==", "active"),
     where("type", "==", tab),
-    orderBy("createdAt", "desc"),
   ];
 
-  // Category: assumes you denormalized `category` onto the listing.
-  // If category lives only on the item doc, add it to listings on create (recommended).
-  if (filters.category && filters.category !== "all") {
-    constraints.push(where("category", "==", filters.category));
-  }
+  const hasMin = typeof filters.minPrice === "number";
+  const hasMax = typeof filters.maxPrice === "number";
 
-  // Price filters for SELL only
-  if (tab === "sell") {
-    if (typeof filters.minPrice === "number") {
-      constraints.push(where("price", ">=", filters.minPrice));
-    }
-    if (typeof filters.maxPrice === "number") {
-      constraints.push(where("price", "<=", filters.maxPrice));
-    }
+  if (tab === "sell" && (hasMin || hasMax)) {
+    if (hasMin) constraints.push(where("price", ">=", filters.minPrice as number));
+    if (hasMax) constraints.push(where("price", "<=", filters.maxPrice as number));
+    // When using inequalities on price, first orderBy must match the field
+    constraints.push(orderBy("price", "asc"));
+    constraints.push(orderBy("createdAt", "desc"));
+  } else {
+    constraints.push(orderBy("createdAt", "desc"));
   }
 
   return query(base, ...constraints);

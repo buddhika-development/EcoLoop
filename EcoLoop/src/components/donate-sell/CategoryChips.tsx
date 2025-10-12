@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 
 type Props = {
-  value?: string | null;               // "all" | category id
+  value?: string | null;             
   categories: { id: string; label: string }[];
   onChange: (next: string) => void;
 };
@@ -17,7 +17,7 @@ export default function CategoryChips({ value = "all", categories, onChange }: P
             key={c.id}
             onPress={() => onChange(c.id)}
             className={`px-3 py-2 mr-2 rounded-full border
-              ${active ? "bg-black border-black" : "bg-white border-gray-300"}`}
+              ${active ? "bg-brand-primary border-brand-primary" : "bg-white border-gray-300"}`}
           >
             <Text className={active ? "text-white font-semibold" : "text-gray-700 font-semibold"}>
               {c.label}
