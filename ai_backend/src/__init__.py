@@ -1,11 +1,21 @@
-
 from flask import Flask
-
+from flask_cors import CORS  # Import CORS
 
 def create_app(config):
-
     app = Flask(__name__)
     app.config.from_object(config)
+    
+    # Enable CORS for all domains and routes
+    CORS(app)
+    
+    # OR for more specific configuration:
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": "*",  # Allow all origins
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
+        }
+    })
 
     from src.router.health_router import health_router
     from src.router.educator_chat_router import educator_chat_router
@@ -17,6 +27,5 @@ def create_app(config):
     app.register_blueprint(educator_chat_router, url_prefix='/api/educator_chat')
     app.register_blueprint(rag_service_router, url_prefix='/api/rag_service')
     app.register_blueprint(post_router, url_prefix='/api/posts')
-
 
     return app

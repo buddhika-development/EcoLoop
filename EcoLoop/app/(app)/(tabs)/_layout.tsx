@@ -1,12 +1,13 @@
 // app/(app)/(tabs)/_layout.tsx
-import { Tabs } from "expo-router";
+import FabChatbot from "@/src/components/FabChatbot";
+import FabPlus from "@/src/components/FabPlus";
+import Header from "@/src/components/Header";
+import { colors } from "@/src/theme/colors";
 import { Ionicons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
-import Header from "@/src/components/Header";
-import FabChatbot from "@/src/components/FabChatbot";
-import { colors } from "@/src/theme/colors";
 
 type TabBarIconProps = {
     size: number;
@@ -81,7 +82,8 @@ export default function TabsLayout() {
                     />
                 </Tabs>
 
-                <FabChatbot onPress={() => { }} />
+                <FabPlus />
+                <FabChatbot />
             </View>
         </View>
     );
