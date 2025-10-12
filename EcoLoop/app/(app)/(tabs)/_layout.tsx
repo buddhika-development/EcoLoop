@@ -48,10 +48,12 @@ export default function TabsLayout() {
                     }}
                 >
                     <Tabs.Screen
-                        name="home"
+                        name="lifecycle"
                         options={{
-                            title: "Home",
-                            tabBarIcon: ({ size, color }: TabBarIconProps) => <Ionicons name="home" size={size} color={color} />,
+                            title: "Lifecycle",
+                            tabBarIcon: ({ size, color }: TabBarIconProps) => (
+                                <Ionicons name="analytics" size={size} color={color} />
+                            ),
                         }}
                     />
                     <Tabs.Screen
@@ -70,15 +72,7 @@ export default function TabsLayout() {
                             ),
                         }}
                     />
-                    <Tabs.Screen
-                        name="lifecycle"
-                        options={{
-                            title: "Lifecycle",
-                            tabBarIcon: ({ size, color }: TabBarIconProps) => (
-                                <Ionicons name="analytics" size={size} color={color} />
-                            ),
-                        }}
-                    />
+
                     <Tabs.Screen
                         name="education-hub"
                         options={{

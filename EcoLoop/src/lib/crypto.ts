@@ -50,8 +50,14 @@ export async function verifyAndParseToken(url: string):
 
 
 /** Backwards-compat: boolean verifier expected by older code */
-export async function verifyQrToken(url: string): Promise<boolean> {
-    return (await verifyAndParseToken(url)) !== null;
+export async function verifyQrToken(token: string): Promise<boolean> {
+    try {
+        const cleaned = String(token ?? "").replace(/[\u0000-\u001F\u007F]/g, "").trim();
+        const parsed = await verifyAndParseToken(cleaned);
+        return !!parsed;
+    } catch {
+        return false;
+    }
 }
 
 /** Convenience alias if you just want the payload (same as verifyAndParseToken) */

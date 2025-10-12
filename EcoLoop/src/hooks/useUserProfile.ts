@@ -16,6 +16,7 @@ export function useUserProfile() {
         (async () => {
             try {
                 const p = await getMyProfile();
+                console.log("Loaded profile:", p);
                 setProfile(p);
             } catch (e) {
                 console.error("Failed to load profile:", e);
