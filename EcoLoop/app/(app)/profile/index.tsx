@@ -259,7 +259,7 @@ export default function ProfileScreen() {
                 {/* Buttons */}
                 <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                     <TouchableOpacity
-                        onPress={onSave}
+                        onPress={() => router.push("/(app)/(tabs)/donate-sell/selling")}
                         style={{
                             flex: 1,
                             backgroundColor: colors.brand.primary,
@@ -289,6 +289,8 @@ export default function ProfileScreen() {
                         <Text style={{ color: "#fff", fontWeight: "700" }}>Sign out</Text>
                     </TouchableOpacity>
                 </View>
+
+                
             </ScrollView>
         </View>
     );

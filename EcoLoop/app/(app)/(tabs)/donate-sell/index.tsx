@@ -5,7 +5,9 @@ import { cssInterop } from "nativewind";
 import { router } from "expo-router";
 import { collection, onSnapshot, query as qf, where, getDoc, DocumentReference, doc, getDocs } from "firebase/firestore";
 import { db } from "@/src/lib/firebase";
-
+import FilterBar from "@/src/components/donate-sell/FilterBar";
+import { buildListingQuery } from "@/src/components/donate-sell/buildListingQuery";
+import { FilterState } from "@/src/components/donate-sell/FilterTypes";
 
 async function fetchItemDocFlexible(itemRef: any) {
   // 1) Try the reference directly
@@ -65,7 +67,7 @@ type Tab = "sell" | "donate";
 
 type ListingDoc = {
   ownerUid: string;
-  itemRef: DocumentReference;
+  itemRef: string | DocumentReference;
   type: "sell" | "donate";
   price: number | null;
   status: "active" | "inactive";
@@ -96,6 +98,51 @@ type Item = {
 type SegmentedProps = { value: Tab; onChange: (v: Tab) => void };
 type ProductCardProps = { item: Item };
 
+function resolveImageForCard(listing: ListingDoc, item: any): string | undefined {
+  // priority: item.images → item.imageUrl → listing.images → listing.imageUrl
+  const fromItemArr = firstImageUrl(item?.images);
+  if (fromItemArr) return fromItemArr;
+
+  if (typeof item?.imageUrl === "string" && item.imageUrl) return item.imageUrl;
+
+  const fromListingArr = firstImageUrl((listing as any)?.images);
+  if (fromListingArr) return fromListingArr;
+
+  if (typeof (listing as any)?.imageUrl === "string" && (listing as any).imageUrl) {
+    return (listing as any).imageUrl;
+  }
+  return undefined;
+}
+
+
+function firstImageUrl(images: any): string | undefined {
+  if (!images) return undefined;
+
+  let u: string | undefined;
+
+  if (Array.isArray(images)) {
+    u = typeof images[0] === "string" ? images[0] : undefined;
+  } else if (typeof images === "object") {
+    const vals = Object.values(images);
+    u = typeof vals[0] === "string" ? (vals[0] as string) : undefined;
+  }
+
+  if (!u) return undefined;
+
+  if (u.startsWith("gs://")) {
+    const without = u.slice(5); // strip "gs://"
+    const slash = without.indexOf("/");
+    if (slash > 0) {
+      const bucket = without.slice(0, slash);
+      const path = encodeURIComponent(without.slice(slash + 1));
+      return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${path}?alt=media`;
+    }
+  }
+  return u;
+}
+
+
+
 function yearsSince(dateStr?: string): number {
   if (!dateStr) return 0;
   const [y, m, d] = dateStr.split("-").map((n) => parseInt(n, 10));
@@ -116,19 +163,40 @@ function getItemDocIdFromRef(ref: any): string | null {
   return null;
 }
 
+// function toCardItem(listingId: string, listing: ListingDoc, item: ItemDoc & { id?: string }) {
+//   const itemId = item.id || getItemDocIdFromRef(listing.itemRef) || listingId; 
+//   return {
+//     id: itemId,            
+//     listingId,             
+//     title: item.name ?? item.model ?? "Untitled",
+//     yearsUsed: item.yearsUsed ?? yearsSince(item.purchaseDate),
+//     price: listing.type === "donate" ? 0 : (listing.price ?? 0),
+//     rating: item.rating ?? 0,
+//     type: listing.type,
+//     imageUrl: firstImageUrl((item as any).images) || ((item as any).imageUrl),
+//   };
+// }
+
 function toCardItem(listingId: string, listing: ListingDoc, item: ItemDoc & { id?: string }) {
-  const itemId = item.id || getItemDocIdFromRef(listing.itemRef) || listingId; // fallback
+  const itemId = item.id || getItemDocIdFromRef(listing.itemRef) || listingId;
+  const listingAny = listing as any;
+
   return {
-    id: itemId,            // 👈 now this is the *item* ID
-    listingId,             // keep if you still need it
-    title: item.name ?? item.model ?? "Untitled",
+    id: itemId,
+    listingId,
+    title: listingAny.itemName ?? item.name ?? item.model ?? "Untitled",
     yearsUsed: item.yearsUsed ?? yearsSince(item.purchaseDate),
     price: listing.type === "donate" ? 0 : (listing.price ?? 0),
     rating: item.rating ?? 0,
     type: listing.type,
-    imageUrl: item.images?.[0],
+    imageUrl:
+      listingAny.itemImage ??
+      firstImageUrl((item as any).images) ??
+      (item as any).imageUrl ??
+      (listingAny.images ? firstImageUrl(listingAny.images) : undefined),
   };
 }
+
 
 
 function Segmented({ value, onChange }: SegmentedProps) {
@@ -169,6 +237,7 @@ function ProductCard({ item }: ProductCardProps) {
             source={{ uri: item.imageUrl }}
             style={{ width: "100%", height: "100%", borderRadius: 12 }}
             resizeMode="cover"
+            onError={(e) => console.log("Image load error:", item.imageUrl, e.nativeEvent?.error)}
           />
         ) : (
           <F name="image" size={32} className="text-text-hint" />
@@ -214,13 +283,20 @@ export default function DonateSell() {
     const [tab, setTab] = useState<Tab>("sell");         
     const [items, setItems] = useState<Item[]>([]);
     const [loading, setLoading] = useState(true);
+    const [filters, setFilters] = useState<FilterState>({
+      category: "all",
+      minPrice: null,
+      maxPrice: null,
+    });
+
     
 
     useEffect(() => {
   setLoading(true);
 
   const ref = collection(db, "listings");
-  const q = qf(ref, where("status", "==", "active"), where("type", "==", tab));
+  // const q = qf(ref, where("status", "==", "active"), where("type", "==", tab));
+  const q = buildListingQuery(db, tab, filters);
 
   const unsub = onSnapshot(
     q,
@@ -251,6 +327,12 @@ export default function DonateSell() {
             // DEBUG: show what we got
             console.log(`[#${idx}] itemData keys:`, Object.keys(itemData));
 
+            if (itemData) {
+              const preview = firstImageUrl((itemData as any).images) || (itemData as any).imageUrl;
+              console.log(`🖼️ Image preview for listing ${d.id}:`, preview);
+            }
+
+
             return toCardItem(d.id, listing, itemData as ItemDoc);
           })
         );
@@ -270,7 +352,7 @@ export default function DonateSell() {
   );
 
   return () => unsub();
-}, [tab]);
+}, [tab, filters]);
 
 
     return (
@@ -303,6 +385,19 @@ export default function DonateSell() {
             className="flex-1 ml-2 text-text"
           />
         </View>
+
+        {/* Filters */}
+        <FilterBar
+          tab={tab}
+          value={filters}
+          onApply={setFilters}
+          categories={[
+            { id: "electronics", label: "Electronics" },
+            { id: "home-appliance", label: "Home Appliances" },
+            { id: "furniture", label: "Furniture" },
+            { id: "tools", label: "Tools" },
+          ]}
+        />
 
         {/* Grid */}
         {loading ? (
