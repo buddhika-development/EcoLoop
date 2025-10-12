@@ -83,6 +83,7 @@ type ItemDoc = {
   purchaseDate?: string;
   yearsUsed?: number;
   rating?: number;
+  category?: string; 
 };
 
 type Item = {
@@ -93,6 +94,7 @@ type Item = {
   rating: number; // 0..5
   type: Tab;
   imageUrl?: string;
+  category?: string; 
 };
 
 type SegmentedProps = { value: Tab; onChange: (v: Tab) => void };
@@ -163,20 +165,6 @@ function getItemDocIdFromRef(ref: any): string | null {
   return null;
 }
 
-// function toCardItem(listingId: string, listing: ListingDoc, item: ItemDoc & { id?: string }) {
-//   const itemId = item.id || getItemDocIdFromRef(listing.itemRef) || listingId; 
-//   return {
-//     id: itemId,            
-//     listingId,             
-//     title: item.name ?? item.model ?? "Untitled",
-//     yearsUsed: item.yearsUsed ?? yearsSince(item.purchaseDate),
-//     price: listing.type === "donate" ? 0 : (listing.price ?? 0),
-//     rating: item.rating ?? 0,
-//     type: listing.type,
-//     imageUrl: firstImageUrl((item as any).images) || ((item as any).imageUrl),
-//   };
-// }
-
 function toCardItem(listingId: string, listing: ListingDoc, item: ItemDoc & { id?: string }) {
   const itemId = item.id || getItemDocIdFromRef(listing.itemRef) || listingId;
   const listingAny = listing as any;
@@ -189,6 +177,7 @@ function toCardItem(listingId: string, listing: ListingDoc, item: ItemDoc & { id
     price: listing.type === "donate" ? 0 : (listing.price ?? 0),
     rating: item.rating ?? 0,
     type: listing.type,
+    category: listingAny.itemCategory ?? item.category ?? undefined,
     imageUrl:
       listingAny.itemImage ??
       firstImageUrl((item as any).images) ??
@@ -300,14 +289,15 @@ export default function DonateSell() {
     q,
     async (snap) => {
       try {
-        const sorted = [...snap.docs].sort((a, b) => {
-          const ta = a.data()?.createdAt?.toMillis?.() ?? 0;
-          const tb = b.data()?.createdAt?.toMillis?.() ?? 0;
-          return tb - ta;
-        });
+        // const sorted = [...snap.docs].sort((a, b) => {
+        //   const ta = a.data()?.createdAt?.toMillis?.() ?? 0;
+        //   const tb = b.data()?.createdAt?.toMillis?.() ?? 0;
+        //   return tb - ta;
+        // });
 
         const joined = await Promise.all(
-          sorted.map(async (d, idx) => {
+          // sorted.map(async (d, idx) => {
+          snap.docs.map(async (d, idx) => {
             const listing = d.data() as ListingDoc;
 
             // DEBUG: show raw listing + hint
@@ -335,15 +325,20 @@ export default function DonateSell() {
           })
         );
 
-        console.log("✅ Final joined rows (first 3):", joined.slice(0, 3));
-        setItems(joined);
+        // console.log("✅ Final joined rows (first 3):", joined.slice(0, 3));
+        // setItems(joined);
+        const next =
+          !filters.category || filters.category === "all"
+            ? joined
+            : joined.filter((x) => (x.category ?? "unknown") === filters.category);
+
+        setItems(next);
       } catch (e) {
         console.log("🔥 join error:", e);
       } finally {
-  
         setLoading(false);
       }
-    );
+    });
 
 
   return () => unsub();
@@ -392,7 +387,7 @@ export default function DonateSell() {
             { id: "electronics", label: "Electronics" },
             { id: "home-appliance", label: "Home Appliances" },
             { id: "furniture", label: "Furniture" },
-            { id: "tools", label: "Tools" },
+            { id: "office-appliance", label: "Office Appliances" },
           ]}
         />
 
