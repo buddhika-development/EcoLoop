@@ -247,6 +247,14 @@ export default function ListingItemPage() {
   return (
          
     <ScrollView className="px-10 pt-5 pb-8 bg-white flex-1">
+
+      <TouchableOpacity
+        onPress={() => router.back()}
+        className="absolute left-0 top-6 z-10 bg-white/90 p-2 rounded-full shadow"
+      >
+        <Ionicons name="arrow-back" size={24} color="#000" />
+      </TouchableOpacity>
+
       {/* 1) Top image */}
       <Image source={{ uri: mainImage }} className="w-full h-56 rounded-xl" />
 
@@ -254,9 +262,15 @@ export default function ListingItemPage() {
       <Text className="text-2xl font-bold mt-4">{displayName}</Text>
 
       {/* 3) Price (from listings) */}
+      {listing?.type === "donate" || (listing?.price ?? 0) === 0 ? (
+        <View className="self-start mt-1 px-3 py-1 rounded-md border border-brand-accent bg-surface-subtle mb-2">
+          <Text className="font-extrabold tracking-wider text-brand-accent">FREE</Text>
+        </View>
+    ) : (
       <Text className="text-green-700 text-xl mb-2 font-bold">
-        Rs. {price.toLocaleString("en-LK")}
+        Rs. {(listing?.price ?? 0).toLocaleString("en-LK")}
       </Text>
+    )}
 
       {/* 4) Used years */}
       <View className="self-start px-3 py-1 rounded-full bg-[#7C3AED] mb-2">
