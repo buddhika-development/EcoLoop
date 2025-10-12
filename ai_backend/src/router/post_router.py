@@ -98,8 +98,18 @@ def search_posts():
         }), 400
     
     search_post_results = post_search(search_query)
+    print(search_post_results)
     
-    return jsonify({"message": "Post search endpoint - to be implemented"}), 200
+    if not search_post_results:
+        return jsonify({
+            "message": "No posts found matching the search criteria.",
+            "posts": []
+        }), 404
+    
+    return jsonify({
+        "message": "Successfully fetched search results.",
+        "posts" : search_post_results
+    }), 200
 
 
 @post_router.route('/post/<string:id>', methods=['GET'])

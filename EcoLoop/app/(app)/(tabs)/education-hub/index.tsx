@@ -1,5 +1,6 @@
 import PostsSection from "@/src/components/layouts/EducationHub/PostsSection";
 import PostVerticalScrollerSection from "@/src/components/layouts/EducationHub/PostVerticalScrollerSection";
+import VerticalPostCard from '@/src/components/layouts/EducationHub/VerticalPostCard';
 import SectionTitle from "@/src/components/ui/Titles/SectionTitle";
 import SmallTitle from "@/src/components/ui/Titles/SmallTitle";
 import { useEffect, useState } from "react";
@@ -80,8 +81,9 @@ export default function EducationHub() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
-        setAllPosts(Array.isArray(data) ? data.slice(0, 4) : [])
+  const data = await response.json();
+  // keep full list so we can fall back to showing all posts when search returns no results
+  setAllPosts(Array.isArray(data) ? data : []);
 
       } catch (error) {
         setError("Error fetching posts");
@@ -96,11 +98,36 @@ export default function EducationHub() {
   }, []);
 
   const handleSubmit = () => {
-    if (searchQuery.trim() !== "") {
-      setIsSearch(true);
-    } else {
+    const q = searchQuery.trim();
+    if (q === "") {
       setIsSearch(false);
+      return;
     }
+
+    // perform search
+    const doSearch = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const API_URL = process.env.BACKEND_IP_ADDRESS || "http://192.168.43.235:5000";
+        const endpoint = `${API_URL}/api/posts/search?search=${encodeURIComponent(q)}`;
+        const res = await fetch(endpoint, { method: 'GET' });
+        if (!res.ok) throw new Error(`Search failed: ${res.status}`);
+        const data = await res.json();
+        // expect data.posts or data.results; try a few shapes
+        const results = data?.posts ?? data?.results ?? data ?? [];
+        setSearchPosts(Array.isArray(results) ? results : []);
+        setIsSearch(true);
+      } catch (err) {
+        setError('Error searching posts');
+        setIsSearch(true);
+        setSearchPosts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    doSearch();
   };
 
   return (
@@ -136,7 +163,40 @@ export default function EducationHub() {
         <View className="mt-5">
           {isSearch ? (
             <View>
-              <Text>This is serach text</Text>
+              {isLoading ? (
+                <Text className='text-[16px] text-text'>Searching...</Text>
+              ) :  (
+                <View>
+                  {searchPosts && searchPosts.length > 0 ? (
+                    searchPosts.map((p: any) => (
+                      <View key={p.post_id ?? p.id} className='mb-4 border-b p-4 border-zinc-200 rounded-xl'>
+                        <VerticalPostCard
+                          post_id={p.post_id ?? p.id}
+                          post_title={p.post_title ?? p.title ?? ''}
+                          post_content={p.post_content ?? p.content ?? ''}
+                          post_image={p.post_image_url ?? p.image}
+                        />
+                      </View>
+                    ))
+                  ) : (
+                    // If search returned no results, show all posts as vertical cards
+                    (allPosts && allPosts.length > 0) ? (
+                      allPosts.map((p: any) => (
+                        <View key={p.post_id ?? p.id} className='mb-4 border-b p-4 border-zinc-200 rounded-xl'>
+                          <VerticalPostCard
+                            post_id={p.post_id ?? p.id}
+                            post_title={p.post_title ?? p.title ?? ''}
+                            post_content={p.post_content ?? p.content ?? ''}
+                            post_image={p.post_image_url ?? p.image}
+                          />
+                        </View>
+                      ))
+                    ) : (
+                      <Text className='text-text'>No results found.</Text>
+                    )
+                  )}
+                </View>
+              )}
             </View>
           ) : isLoading ? (
             <View>

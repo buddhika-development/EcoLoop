@@ -22,10 +22,7 @@ def access_single_post(post_id):
 def post_search(query : str) :
 
     response = supabase.table("posts").select("*").ilike("post_title", query).execute()
-
-    print(response)
-
-    return None
+    return response.data if response.data else None
 
 
 def access_single_post_by_id(post_id):
