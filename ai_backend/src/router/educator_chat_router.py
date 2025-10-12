@@ -21,10 +21,10 @@ def educator_chat_post():
     request_body = request.get_json()
     request_header = request.headers.get("Authorization")
 
-    is_autorized_request = is_authenticated(request_header)
+    # is_autorized_request = is_authenticated(request_header)
     
-    if not is_autorized_request:
-        return jsonify({"error": "Unauthorized"}), 401
+    # if not is_autorized_request:
+    #     return jsonify({"error": "Unauthorized"}), 401
 
     try:
         question = request_body.get("question", "")

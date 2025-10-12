@@ -17,7 +17,7 @@ def prepare_post_validator_prompt_template(post_validation_response_parser) -> P
                 * Circular Economy principles (e.g., Reuse, Repair, Recycling technology, Closed-Loop Systems).
                 * Sustainability and environmental science (e.g., Carbon Footprint reduction, Renewable Energy, Water Conservation, Biodiversity).
                 * Sustainable design, materials, and lifecycle assessment (LCA).
-                * Eco-friendly business models, policy, or regulation.
+                * Eco-friendly business models, policy, or regulation, related content. motivation like things. Anything related to that topic allow as valid content.
                 * **Examples of REJECTION (Non-Domain Content):** General technology/programming guides (unrelated to green tech), political commentary, general finance/stock market news, personal health tips, cooking recipes (unless explicitly about food waste/composting), travel logs (unless explicitly about sustainable tourism).
 
             * **APPROVAL REQUIREMENT:** The post must clearly and demonstrably relate to the core domain.
@@ -31,6 +31,8 @@ def prepare_post_validator_prompt_template(post_validation_response_parser) -> P
                 * Explicitly offensive, sexually suggestive, or vulgar material.
                 * Spam, phishing, or financial scams.
                 * Content that explicitly promotes **greenwashing** or unethical environmental practices without critical analysis.
+                * Avaoid raisism, unwanted political content.
+                * meaning less contents
 
             * **APPROVAL REQUIREMENT:** The content must be safe, ethical, and factual.
 
@@ -43,10 +45,10 @@ def prepare_post_validator_prompt_template(post_validation_response_parser) -> P
             * The post meets **Criterion 1 (Relevance)** AND **Criterion 2 (Safety)**.
             * **Response Format:**
                 ```json
-                {
+                {{
                     "status": "APPROVED",
                     "reason": "Content is relevant and adheres to safety guidelines."
-                }
+                }}
                 ```
 
             #### B. If Content is Rejected:
@@ -55,10 +57,10 @@ def prepare_post_validator_prompt_template(post_validation_response_parser) -> P
             * You must clearly state which criterion was failed.
             * **Response Format:**
                 ```json
-                {
+                {{
                     "status": "REJECTED",
                     "reason": "The post fails validation due to [Choose One: DOMAIN_RELEVANCE or HARMFUL_CONTENT]. Specifically, [Provide a brief, actionable explanation for the rejection]."
-                }
+                }}
                 ```
 
             **[INPUT FORMAT]**
@@ -70,6 +72,9 @@ def prepare_post_validator_prompt_template(post_validation_response_parser) -> P
 
             **[FINAL INSTRUCTION]**
             You are now ready. Wait for the user to provide the TITLE and CONTENT of the post they wish to validate.
+
+            post title : {title}
+            post content : {content}            
             """,
 
             input_variables= ["title", "content"],

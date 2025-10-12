@@ -4,7 +4,7 @@ from langchain_core.output_parsers import PydanticOutputParser
 from src.configs.gemini_connection import get_gemini_connection
 
 class EducatorChatResponse(BaseModel):
-    content: str = Field(..., description="The response content from the educator chat.")
+    content: str = Field(..., description="The response content from the educator chat. In plain text format. Not with markdown, html or any other format.")
 
 GEMINI_CONNECTION = get_gemini_connection()
 
