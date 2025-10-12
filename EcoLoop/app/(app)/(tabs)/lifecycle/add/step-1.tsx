@@ -78,12 +78,12 @@ export default function Step1() {
                 <TouchableOpacity
                     onPress={onBack}
                     activeOpacity={0.8}
+                    hitSlop={10}
                     style={{
                         position: "absolute",
-                        top: Platform.OS === "ios" ? 30 : 10, // Reduced from 60/40 to 50/30
+                        top: Platform.OS === "ios" ? 30 : 10,
                         left: 16,
-                        flexDirection: "row",
-                        alignItems: "center",
+                        zIndex: 2, // <— keep button above but small hit area
                         backgroundColor: "rgba(255,255,255,0.7)",
                         borderRadius: 999,
                         padding: 8,
@@ -93,123 +93,131 @@ export default function Step1() {
                 </TouchableOpacity>
             </View>
 
-            <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-                {/* Item name + AI chip */}
-                <Controller
-                    control={control}
-                    name="name"
-                    render={({ field: { value, onChange } }) => (
-                        <>
+            <View
+                style={{
+                    flex: 1,
+                    position: "relative",
+                    zIndex: 0, // <— ensures ScrollView & children get touch priority
+                }}
+            >
+                <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+                    {/* Item name + AI chip */}
+                    <Controller
+                        control={control}
+                        name="name"
+                        render={({ field: { value, onChange } }) => (
+                            <>
+                                <Field
+                                    label="Item Name *"
+                                    error={errors.name?.message}
+                                    inputProps={{
+                                        placeholder: "e.g., Samsung TV",
+                                        value,
+                                        onChangeText: onChange,
+                                        autoCapitalize: "words",
+                                        returnKeyType: "next",
+                                    }}
+                                />
+                                <TouchableOpacity
+                                    onPress={() => onSuggest(value)}
+                                    activeOpacity={0.9}
+                                    style={{
+                                        alignSelf: "flex-start",
+                                        marginTop: -6,
+                                        marginBottom: 6,
+                                        backgroundColor: "#EEE8FF",
+                                        paddingHorizontal: 12,
+                                        paddingVertical: 6,
+                                        borderRadius: 999,
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    <Ionicons name="sparkles-outline" size={16} color={colors.brand.primary} />
+                                    <Text style={{ color: colors.brand.primary, marginLeft: 6, fontWeight: "600" }}>
+                                        AI Suggest Category
+                                    </Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
+                    />
+
+                    {/* Category */}
+                    <Controller
+                        control={control}
+                        name="category"
+                        render={({ field: { value, onChange } }) => (
+                            <CategorySelect value={value as CategoryValue} onChange={onChange} error={errors.category?.message} />
+                        )}
+                    />
+
+                    {/* Brand */}
+                    <Controller
+                        control={control}
+                        name="brand"
+                        render={({ field: { value, onChange } }) => (
                             <Field
-                                label="Item Name *"
-                                error={errors.name?.message}
+                                label="Brand"
+                                error={errors.brand?.message}
+                                inputProps={{ placeholder: "e.g., Samsung", value, onChangeText: onChange }}
+                            />
+                        )}
+                    />
+
+                    {/* Model */}
+                    <Controller
+                        control={control}
+                        name="model"
+                        render={({ field: { value, onChange } }) => (
+                            <Field
+                                label="Model Number"
+                                error={errors.model?.message}
+                                inputProps={{ placeholder: "e.g., QLED X55", value, onChangeText: onChange }}
+                            />
+                        )}
+                    />
+
+                    {/* Description / Note */}
+                    <Controller
+                        control={control}
+                        name="description"
+                        render={({ field: { value, onChange } }) => (
+                            <Field
+                                label="Description / Note"
+                                error={errors.description?.message}
                                 inputProps={{
-                                    placeholder: "e.g., Samsung TV",
+                                    placeholder: "Any notes you want to remember...",
+                                    multiline: true,
+                                    numberOfLines: 4,
                                     value,
                                     onChangeText: onChange,
-                                    autoCapitalize: "words",
-                                    returnKeyType: "next",
+                                    style: { textAlignVertical: "top", minHeight: 100 },
                                 }}
                             />
-                            <TouchableOpacity
-                                onPress={() => onSuggest(value)}
-                                activeOpacity={0.9}
-                                style={{
-                                    alignSelf: "flex-start",
-                                    marginTop: -6,
-                                    marginBottom: 6,
-                                    backgroundColor: "#EEE8FF",
-                                    paddingHorizontal: 12,
-                                    paddingVertical: 6,
-                                    borderRadius: 999,
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                }}
-                            >
-                                <Ionicons name="sparkles-outline" size={16} color={colors.brand.primary} />
-                                <Text style={{ color: colors.brand.primary, marginLeft: 6, fontWeight: "600" }}>
-                                    AI Suggest Category
-                                </Text>
-                            </TouchableOpacity>
-                        </>
-                    )}
-                />
+                        )}
+                    />
 
-                {/* Category */}
-                <Controller
-                    control={control}
-                    name="category"
-                    render={({ field: { value, onChange } }) => (
-                        <CategorySelect value={value as CategoryValue} onChange={onChange} error={errors.category?.message} />
-                    )}
-                />
+                    {/* Footer buttons */}
+                    <View className="flex-row mt-6">
+                        <TouchableOpacity
+                            onPress={onSaveDraft}
+                            activeOpacity={0.9}
+                            className="flex-1 mr-2 rounded-xl bg-white border border-surface-foreground py-3 items-center"
+                        >
+                            <Text className="text-text font-semibold">{isSubmitting ? "Saving…" : "Save draft"}</Text>
+                        </TouchableOpacity>
 
-                {/* Brand */}
-                <Controller
-                    control={control}
-                    name="brand"
-                    render={({ field: { value, onChange } }) => (
-                        <Field
-                            label="Brand"
-                            error={errors.brand?.message}
-                            inputProps={{ placeholder: "e.g., Samsung", value, onChangeText: onChange }}
-                        />
-                    )}
-                />
-
-                {/* Model */}
-                <Controller
-                    control={control}
-                    name="model"
-                    render={({ field: { value, onChange } }) => (
-                        <Field
-                            label="Model Number"
-                            error={errors.model?.message}
-                            inputProps={{ placeholder: "e.g., QLED X55", value, onChangeText: onChange }}
-                        />
-                    )}
-                />
-
-                {/* Description / Note */}
-                <Controller
-                    control={control}
-                    name="description"
-                    render={({ field: { value, onChange } }) => (
-                        <Field
-                            label="Description / Note"
-                            error={errors.description?.message}
-                            inputProps={{
-                                placeholder: "Any notes you want to remember...",
-                                multiline: true,
-                                numberOfLines: 4,
-                                value,
-                                onChangeText: onChange,
-                                style: { textAlignVertical: "top", minHeight: 100 },
-                            }}
-                        />
-                    )}
-                />
-
-                {/* Footer buttons */}
-                <View className="flex-row mt-6">
-                    <TouchableOpacity
-                        onPress={onSaveDraft}
-                        activeOpacity={0.9}
-                        className="flex-1 mr-2 rounded-xl bg-white border border-surface-foreground py-3 items-center"
-                    >
-                        <Text className="text-text font-semibold">{isSubmitting ? "Saving…" : "Save draft"}</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        onPress={onNext}
-                        activeOpacity={0.9}
-                        className="flex-1 ml-2 rounded-xl py-3 items-center"
-                        style={{ backgroundColor: colors.brand.accent }}
-                    >
-                        <Text className="text-white font-semibold">Next</Text>
-                    </TouchableOpacity>
-                </View>
-            </ScrollView>
+                        <TouchableOpacity
+                            onPress={onNext}
+                            activeOpacity={0.9}
+                            className="flex-1 ml-2 rounded-xl py-3 items-center"
+                            style={{ backgroundColor: colors.brand.accent }}
+                        >
+                            <Text className="text-white font-semibold">Next</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+            </View>
         </KeyboardAvoidingView>
     );
 }

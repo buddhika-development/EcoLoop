@@ -81,6 +81,7 @@ export async function registerWithProfile(
 
 export async function getMyProfile() {
     const uid = auth.currentUser?.uid;
+    console.log("getMyProfile", { uid });
     if (!uid) throw new Error("Not signed in");
     const snap = await getDoc(doc(db, "users", uid));
     return snap.exists() ? { id: snap.id, ...snap.data() } : null;
@@ -88,6 +89,7 @@ export async function getMyProfile() {
 
 export async function getUserProfile({ userId }: { userId: string }) {
     const uid = auth.currentUser?.uid;
+    console.log("getUserProfile", { userId, uid });
     if (!uid) throw new Error("Not signed in");
     if (!userId) throw new Error("No userId provided");
     if (userId === uid) return getMyProfile(); // optional optimization

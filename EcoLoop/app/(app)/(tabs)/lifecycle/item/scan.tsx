@@ -48,17 +48,21 @@ export default function QRScan() {
         setBusy(true);
 
         try {
-            const ok = await verifyQrToken(data);
+            // 🔧 iOS sometimes adds hidden control chars/newlines → strip + trim
+            const cleaned = String(data ?? "").replace(/[\u0000-\u001F\u007F]/g, "").trim();
+
+            // 1) verify our QR token
+            const ok = await verifyQrToken(cleaned);
             if (!ok) {
                 Alert.alert("Invalid QR", "This code is not an EcoLoop item QR.");
                 setBusy(false);
                 return;
             }
 
-            // parse itemId from token
+            // 2) parse itemId from the token URL
             let itemId = "";
             try {
-                const url = new URL(data);
+                const url = new URL(cleaned);
                 const d = url.searchParams.get("d");
                 if (!d) throw new Error("Missing payload");
                 const payload = JSON.parse(decodeURIComponent(d));
@@ -75,7 +79,7 @@ export default function QRScan() {
                 return;
             }
 
-            // fetch item
+            // 3) fetch item
             const snap = await getDoc(doc(db, "items", itemId));
             if (!snap.exists()) {
                 Alert.alert("Not found", "This item no longer exists.");
@@ -102,6 +106,7 @@ export default function QRScan() {
             setBusy(false);
         }
     }
+
 
     const isOwner = useMemo(() => {
         const uid = auth.currentUser?.uid;
