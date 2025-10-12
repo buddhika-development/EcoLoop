@@ -55,9 +55,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: colors.brand.primary,
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: colors.surface.foreground,
+        backgroundColor: colors.brand.primary
     },
     logo: { width: 70, height: 70, marginTop: -12, marginLeft: -6 },
     avatarBtn: { width: 36, height: 36, borderRadius: 18, overflow: "hidden" },

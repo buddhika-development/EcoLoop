@@ -16,7 +16,7 @@ async function fetchItemDocFlexible(itemRef: any) {
       const snap = await getDoc(itemRef as DocumentReference);
       if (snap.exists()) return { id: snap.id, ...(snap.data() as any) };
     }
-  } catch {}
+  } catch { }
 
   // 2) Try by ref.id (e.g., "item_001")
   try {
@@ -35,7 +35,7 @@ async function fetchItemDocFlexible(itemRef: any) {
         return { id: first.id, ...(first.data() as any) };
       }
     }
-  } catch {}
+  } catch { }
 
   // 3) If someone saved a string path, support it: "/items/item_001" or "items/item_001"
   try {
@@ -47,7 +47,7 @@ async function fetchItemDocFlexible(itemRef: any) {
         if (snap.exists()) return { id: snap.id, ...(snap.data() as any) };
       }
     }
-  } catch {}
+  } catch { }
 
   return null;
 }
@@ -80,9 +80,9 @@ type ItemDoc = {
   name?: string;
   model?: string;
   images?: string[];
-  purchaseDate?: string; 
-  yearsUsed?: number;    
-  rating?: number;       
+  purchaseDate?: string;
+  yearsUsed?: number;
+  rating?: number;
 };
 
 type Item = {
@@ -202,22 +202,20 @@ function toCardItem(listingId: string, listing: ListingDoc, item: ItemDoc & { id
 function Segmented({ value, onChange }: SegmentedProps) {
   return (
     <View className="flex-row rounded-full p-1 bg-surface-subtle border border-surface-foreground ">
-      { (["sell", "donate"] as Tab[]).map((key) => { 
+      {(["sell", "donate"] as Tab[]).map((key) => {
         const active = value === key;
         return (
           <Pressable
             key={key}
-            onPress={() => onChange(key)}    
-            className={`flex-1 items-center py-2 rounded-full ${
-              active ? "bg-brand-primary" : "bg-surface-subtle"
-            }`}
+            onPress={() => onChange(key)}
+            className={`flex-1 items-center py-2 rounded-full ${active ? "bg-brand-primary" : "bg-surface-subtle"
+              }`}
           >
             <Text
-              className={`font-semibold ${
-                active ? "text-text-inverse" : "text-text-hint"
-              }`}
+              className={`font-semibold ${active ? "text-text-inverse" : "text-text-hint"
+                }`}
             >
-             {key === "sell" ? "Sell" : "Donate"} 
+              {key === "sell" ? "Sell" : "Donate"}
             </Text>
           </Pressable>
         );
@@ -228,9 +226,9 @@ function Segmented({ value, onChange }: SegmentedProps) {
 
 function ProductCard({ item }: ProductCardProps) {
   return (
-    <Pressable 
-     onPress={() => router.push(`/(app)/(tabs)/donate-sell/listing/${item.id}`)}
-     className="w-[48%] bg-surface border border-surface-foreground rounded-2xl p-4 mr-3 mb-4">
+    <Pressable
+      onPress={() => router.push(`/(app)/(tabs)/donate-sell/listing/${item.id}`)}
+      className="w-[48%] bg-surface border border-surface-foreground rounded-2xl p-4 mr-3 mb-4">
       <View className="h-[110px] rounded-xl items-center justify-center mb-3 bg-surface-subtle overflow-hidden">
         {item.imageUrl ? (
           <Image
@@ -266,9 +264,8 @@ function ProductCard({ item }: ProductCardProps) {
         {Array.from({ length: 5 }).map((_, i) => (
           <Text
             key={i}
-            className={`text-xs mr-1 ${
-              i < item.rating ? "text-amber-500" : "text-surface-foreground"
-            }`}
+            className={`text-xs mr-1 ${i < item.rating ? "text-amber-500" : "text-surface-foreground"
+              }`}
           >
             ★
           </Text>
@@ -279,6 +276,7 @@ function ProductCard({ item }: ProductCardProps) {
 }
 
 export default function DonateSell() {
+
 
     const [tab, setTab] = useState<Tab>("sell");         
     const [items, setItems] = useState<Item[]>([]);
@@ -342,21 +340,20 @@ export default function DonateSell() {
       } catch (e) {
         console.log("🔥 join error:", e);
       } finally {
+  
         setLoading(false);
       }
-    },
-    (err) => {
-      console.log("🔥 listings feed error:", err);
-      setLoading(false);
-    }
-  );
+    );
+
 
   return () => unsub();
 }, [tab, filters]);
 
+  
 
-    return (
-      <SafeAreaView className="flex-1 bg-surface-subtle">
+
+  return (
+    <SafeAreaView className="flex-1 bg-surface-subtle">
       <View className="flex-row items-center justify-between px-4 pt-2 pb-3 bg-surface">
         <View className="flex-row items-center">
           <View>
@@ -365,9 +362,9 @@ export default function DonateSell() {
           </View>
         </View>
 
-        <TouchableOpacity 
-        className="px-3 py-2 rounded-2xl bg-brand-primary"
-        onPress={() => router.push("/(app)/(tabs)/donate-sell/new")}>
+        <TouchableOpacity
+          className="px-3 py-2 rounded-2xl bg-brand-primary"
+          onPress={() => router.push("/(app)/(tabs)/donate-sell/new")}>
           <I name="add" size={20} className="text-text-inverse" />
         </TouchableOpacity>
       </View>
@@ -381,7 +378,7 @@ export default function DonateSell() {
           <I name="search" size={18} className="text-text-hint" />
           <TextInput
             placeholder="Tell us your need..."
-            placeholderTextColor="#787F8D"  
+            placeholderTextColor="#787F8D"
             className="flex-1 ml-2 text-text"
           />
         </View>
@@ -424,9 +421,9 @@ export default function DonateSell() {
         )}
       </View>
 
-      
+
 
     </SafeAreaView>
-    );
+  );
 }
 

@@ -1,4 +1,3 @@
-// app/(app)/repair-recycle/shop/[id].tsx
 import { useEffect, useMemo, useState , useCallback } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -191,6 +190,9 @@ export default function ShopDetails() {
     );
   }
 
+  const logoBg =
+    shop.type === "recycle" ? colors.brand.accent : colors.brand.primary;
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.surface.subtle }}>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 28 }}>
@@ -201,7 +203,7 @@ export default function ShopDetails() {
           </TouchableOpacity>
 
           <View style={s.topTitleWrap}>
-            <View style={s.logoCircleSm}>
+            <View style={[s.logoCircleSm ,  { backgroundColor: logoBg }]}>
               <FontAwesome5 name={shop.type === "recycle" ? "recycle" : "wrench"} size={16} color="#fff" />
             </View>
             <Text style={s.topTitle} numberOfLines={1}>{shop.name}</Text>
@@ -210,16 +212,15 @@ export default function ShopDetails() {
           <TouchableOpacity style={s.iconBtn} onPress={onToggleSave}>
             <MaterialIcons
               name={saved ? "bookmark" : "bookmark-border"}
-              size={20}
-              color={colors.text.base}
-            />
+              size={22}
+              color={colors.brand.primary}
+            /> 
           </TouchableOpacity>
         </View>
 
         {/* Card: Status + Rating */}
         <View style={s.card}>
           <View style={s.rowBetween}>
-            {/* ⬇️ replaced black text star with a gold FontAwesome star */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexShrink: 1 }}>
               <FontAwesome name="star" size={18} color="#fbbf24" />
               <Text style={s.big}>{(shop.rating?.avg ?? 0).toFixed(1)}</Text>
@@ -327,7 +328,6 @@ export default function ShopDetails() {
         <View style={s.card}>
           <Text style={s.sectionTitle}>Reviews</Text>
 
-          {/* ⬇️ replaced black text star line with gold icon next to average */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 4 }}>
             <FontAwesome name="star" size={18} color="#fbbf24" />
             <Text style={{ fontSize: 18, fontWeight: "800", color: colors.text.base }}>
@@ -358,7 +358,6 @@ export default function ShopDetails() {
                       )}
                     </View>
 
-                    {/* ⬇️ star row for each review (gold filled up to r.stars) */}
                     <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}>
                       {[1,2,3,4,5].map((n) => (
                         <FontAwesome
@@ -400,7 +399,8 @@ export default function ShopDetails() {
           style={s.modalOverlayCenter}
         >
           <View style={s.popupCard}>
-            {/* Header: only one back button */}
+            
+            {/* Back button */}
             <View style={s.popupHeader}>
               <TouchableOpacity onPress={() => setRevOpen(false)} style={{ padding: 4 }}>
                 <MaterialIcons name="chevron-left" size={26} color={colors.text.base} />
@@ -412,6 +412,7 @@ export default function ShopDetails() {
 
             {/* Content */}
             <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 90 }}>
+
               {/* Stars */}
               <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
                 <Text style={{ color: colors.text.base, fontWeight: "700" }}>Rating</Text>
