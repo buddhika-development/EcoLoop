@@ -55,7 +55,7 @@ const posts = [
 export default function EducationHub() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearch, setIsSearch] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [allPosts, setAllPosts] = useState<any[] | null>(null);
   const [searchPosts, setSearchPosts] = useState<any[] | null>(null);
@@ -66,7 +66,7 @@ export default function EducationHub() {
       try {
         console.log("Fetching posts from API...");
 
-        const API_URL = process.env.BACKEND_IP_ADDRESS || "http://192.168.8.101:5000"; // Your Flask backend URL
+        const API_URL = process.env.BACKEND_IP_ADDRESS || "http://192.168.43.235:5000"; // Your Flask backend URL
 
         const response = await fetch(`${API_URL}/api/posts/all`, {
           method: "GET",
@@ -81,10 +81,13 @@ export default function EducationHub() {
         }
 
         const data = await response.json();
-        setAllPosts(data);
+        setAllPosts(Array.isArray(data) ? data.slice(0, 4) : [])
 
       } catch (error) {
         setError("Error fetching posts");
+      }
+      finally {
+        setIsLoading(false);
       }
     };
 
@@ -137,7 +140,33 @@ export default function EducationHub() {
             </View>
           ) : isLoading ? (
             <View>
-              <Text>loading...</Text>
+              <>
+                <View>
+                  <View className="flex-row justify-between items-center mb-4">
+                    <View className="h-6 w-36 bg-gray-300 rounded" />
+                    <View className="h-6 w-20 bg-gray-200 rounded" />
+                  </View>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} className="-mx-5 px-5">
+                    {[...Array(4)].map((_, i) => (
+                      <View key={i} className="mr-3 w-[140px] h-[180px] bg-gray-200 rounded-lg" />
+                    ))}
+                  </ScrollView>
+                </View>
+
+                <View className="mt-6">
+                  <View className="h-6 w-40 bg-gray-300 rounded mb-3" />
+                  {[...Array(3)].map((_, i) => (
+                    <View key={i} className="flex-row items-center mb-4">
+                      <View className="w-[88px] h-[88px] bg-gray-200 rounded-lg mr-3" />
+                      <View className="flex-1">
+                        <View className="h-5 bg-gray-200 rounded w-3/4 mb-2" />
+                        <View className="h-4 bg-gray-100 rounded w-full mb-1" />
+                        <View className="h-4 bg-gray-100 rounded w-5/6" />
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </>
             </View>
           ) : (
             <View>

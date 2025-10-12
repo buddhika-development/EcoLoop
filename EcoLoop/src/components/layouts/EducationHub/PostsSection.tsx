@@ -20,7 +20,7 @@ const PostsSection = () => {
         try {
           console.log("Fetching posts from API...");
 
-          const API_URL = process.env.BACKEND_IP_ADDRESS || "http://192.168.8.101:5000"; // Your Flask backend URL
+          const API_URL = process.env.BACKEND_IP_ADDRESS || "http://192.168.43.235:5000"; // Your Flask backend URL
 
           const response = await fetch(`${API_URL}/api/posts/all`, {
             method: "GET",
@@ -47,13 +47,15 @@ const PostsSection = () => {
       fetchPosts();
     }, []);
 
+    const displayedPosts = allPosts ? allPosts.slice(4) : null;
+
   return (
     <View className="mt-5">
       <SmallTitle title_content="More Readings" className="mt-5" />
 
       {/* posts section */}
       <View>
-        {allPosts?.map((post, index) => (
+        {displayedPosts?.map((post, index) => (
           <View key={index} className="border-b-[1px] border-zinc-200 py-3">
             <VerticalPostCard
               post_id={post.post_id}

@@ -1,23 +1,23 @@
-import { useEffect, useState } from "react";
-import {
-    View,
-    Text,
-    Image,
-    TouchableOpacity,
-    TextInput,
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-} from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import { Ionicons } from "@expo/vector-icons";
 import { useUserProfile } from "@/src/hooks/useUserProfile";
-import { colors } from "@/src/theme/colors";
 import { auth, storage } from "@/src/lib/firebase";
 import { updateMyProfile, updateMyProfilePic } from "@/src/services/profile";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { colors } from "@/src/theme/colors";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import { router } from "expo-router";
 import { signOut } from "firebase/auth";
-import { Link, router } from "expo-router";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    Alert,
+    Image,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 /**

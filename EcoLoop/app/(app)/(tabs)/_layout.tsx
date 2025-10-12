@@ -1,5 +1,6 @@
 // app/(app)/(tabs)/_layout.tsx
 import FabChatbot from "@/src/components/FabChatbot";
+import FabPlus from "@/src/components/FabPlus";
 import Header from "@/src/components/Header";
 import { colors } from "@/src/theme/colors";
 import { Ionicons } from "@expo/vector-icons";
@@ -82,6 +83,7 @@ export default function TabsLayout() {
                     />
                 </Tabs>
 
+                <FabPlus />
                 <FabChatbot />
             </View>
         </View>
