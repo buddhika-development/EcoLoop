@@ -1,7 +1,7 @@
 import { View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/src/theme/colors";
-import { useLifecycleStats } from "@/src/hooks/useLifecycleStats";
+
 
 export default function EcoCard({
     title,
@@ -12,9 +12,6 @@ export default function EcoCard({
     subtitle?: string;
     rightIcon?: keyof typeof Ionicons.glyphMap;
 }) {
-
-    const { loading, itemsCount, maintDue, warrantyAlerts, ecoKgSaved, suggestion, ecoMethodNote } =
-        useLifecycleStats();
     return (
         <View
             style={{
@@ -40,12 +37,6 @@ export default function EcoCard({
                     </Text>
                 )}
 
-                {/* small method note if present */}
-                {!loading && ecoMethodNote ? (
-                    <Text className="text-text-hint text-[10px] mt-1 px-1">
-                        {ecoMethodNote}
-                    </Text>
-                ) : null}
             </View>
             <View
                 style={{

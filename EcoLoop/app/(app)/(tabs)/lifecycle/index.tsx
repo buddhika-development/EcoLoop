@@ -17,6 +17,7 @@ import QuickActionButton from "@/src/components/lifecycle/QuickActionButton";
 import EcoCard from "@/src/components/lifecycle/EcoCard";
 import React from "react";
 import { useEcoTipClient } from "@/src/hooks/useEcoTipClient";
+import EcoCard2 from "@/src/components/lifecycle/EcoCard2";
 
 
 const heroBg = require("@/assets/lifecycleBG.png");
@@ -26,10 +27,10 @@ const HERO_HEIGHT = 280;
 
 export default function LifecycleHub() {
     const insets = useSafeAreaInsets();
-    const { loading, itemsCount, maintDue, warrantyAlerts, ecoKgSaved, suggestion } =
+    const { loading, itemsCount, maintDue, warrantyAlerts, ecoKgSaved, suggestion, ecoMethodNote } =
         useLifecycleStats();
 
-    const { data: ecoTip, loading: tipLoading } = useEcoTipClient("lifecycle care");
+    const { data: ecoTip, loading: tipLoading } = useEcoTipClient("Lifecycle Care tips for sri lankans about household items");
 
     // --- simple hero animation (fade + scale from 1.05 -> 1) ---
     const bgProgress = useSharedValue(0);
@@ -144,6 +145,14 @@ export default function LifecycleHub() {
                         subtitle={`You saved ${loading ? "…" : ecoKgSaved} kg of e-waste this year.`}
                         rightIcon="leaf"
                     />
+
+                    {/* small method note if present
+                    {!loading && ecoMethodNote ? (
+                        <Text className="text-text-hint text-[10px] mt-1 px-1">
+                            {ecoMethodNote}
+                        </Text>
+                    ) : null} */}
+
                 </Animated.View>
 
                 {!!suggestion && (
@@ -158,7 +167,7 @@ export default function LifecycleHub() {
                             elevation: 2,
                         }}
                     >
-                        <EcoCard title="Smart suggestion" subtitle={suggestion} rightIcon="bulb" />
+                        <EcoCard2 title="Smart suggestion" subtitle={suggestion} rightIcon="bulb" />
                     </Animated.View>
                 )}
 
