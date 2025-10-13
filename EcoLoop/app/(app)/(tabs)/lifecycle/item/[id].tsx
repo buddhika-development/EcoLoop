@@ -215,12 +215,12 @@ export default function ItemDetails() {
                 {/* Action chips */}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3">
                     <TouchableOpacity
-                        onPress={() => router.push({ pathname: "/(app)/(tabs)/lifecycle/item/reminders", params: { itemId: id! } })}
+                        onPress={() => router.push({ pathname: "/(app)/(tabs)/lifecycle/item/logs", params: { itemId: id! } })}
                         className="px-3 py-2 rounded-full mr-8" style={{ backgroundColor: colors.surface.foreground }}>
                         <Text>Maintenance Log</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        onPress={() => router.push({ pathname: "/(app)/(tabs)/lifecycle/item/reminders", params: { itemId: id! } })}
+                        onPress={() => router.push({ pathname: "/(app)/(tabs)/lifecycle/item/schedule", params: { itemId: id! } })}
                         className="px-3 py-2 rounded-full mr-8" style={{ backgroundColor: colors.surface.foreground }}>
                         <Text>Schedule Maintenance</Text>
                     </TouchableOpacity>

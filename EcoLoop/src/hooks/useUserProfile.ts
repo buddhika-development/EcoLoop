@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { getMyProfile } from "@/src/services/profile";
 import { useAuth } from "@/src/providers/AuthProvider";
+import { getMyProfile } from "@/src/services/profile";
+import { useEffect, useState } from "react";
 
 export function useUserProfile() {
     const { user, loading: authLoading } = useAuth();
@@ -16,6 +16,7 @@ export function useUserProfile() {
         (async () => {
             try {
                 const p = await getMyProfile();
+                console.log("Loaded profile:", p);
                 setProfile(p);
             } catch (e) {
                 console.error("Failed to load profile:", e);
@@ -27,3 +28,4 @@ export function useUserProfile() {
 
     return { user, profile, loading: authLoading || loading };
 }
+

@@ -1,7 +1,7 @@
 // src/services/profile.ts
 import { auth, db } from "@/src/lib/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 
 type Address = {
     line1?: string;
@@ -81,13 +81,15 @@ export async function registerWithProfile(
 
 export async function getMyProfile() {
     const uid = auth.currentUser?.uid;
+    console.log("getMyProfile", { uid });
     if (!uid) throw new Error("Not signed in");
     const snap = await getDoc(doc(db, "users", uid));
-    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+    return snap.exists() ? { id: snap.id, ...snap.data(), } : null;
 }
 
 export async function getUserProfile({ userId }: { userId: string }) {
     const uid = auth.currentUser?.uid;
+    console.log("getUserProfile", { userId, uid });
     if (!uid) throw new Error("Not signed in");
     if (!userId) throw new Error("No userId provided");
     if (userId === uid) return getMyProfile(); // optional optimization
@@ -114,3 +116,4 @@ export async function updateMyProfilePic(url: string) {
     });
     await updateProfile(auth.currentUser!, { photoURL: url });
 }
+

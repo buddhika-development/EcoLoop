@@ -83,7 +83,7 @@ type ItemDoc = {
   purchaseDate?: string;
   yearsUsed?: number;
   rating?: number;
-  category?: string; 
+  category?: string;
 };
 
 type Item = {
@@ -94,7 +94,7 @@ type Item = {
   rating: number; // 0..5
   type: Tab;
   imageUrl?: string;
-  category?: string; 
+  category?: string;
 };
 
 type SegmentedProps = { value: Tab; onChange: (v: Tab) => void };
@@ -296,37 +296,38 @@ export default function DonateSell() {
               return toCardItem(d.id, listing, { id: "unknown" });
             }
 
-            // DEBUG: show what we got
-            console.log(`[#${idx}] itemData keys:`, Object.keys(itemData));
-
-            if (itemData) {
-              const preview = firstImageUrl((itemData as any).images) || (itemData as any).imageUrl;
-              console.log(`🖼️ Image preview for listing ${d.id}:`, preview);
-            }
 
 
-            return toCardItem(d.id, listing, itemData as ItemDoc);
-          })
-        );
+           // DEBUG: show what we got
+              console.log(`[#${idx}] itemData keys:`, Object.keys(itemData));
 
-        const next =
-          !filters.category || filters.category === "all"
+              if (itemData) {
+                const preview = firstImageUrl((itemData as any).images) || (itemData as any).imageUrl;
+                console.log(`🖼️ Image preview for listing ${d.id}:`, preview);
+              }
+
+              return toCardItem(d.id, listing, itemData);
+            })
+          );
+
+          const next = !filters.category || filters.category === "all"
             ? joined
-            : joined.filter((x) => (x.category ?? "unknown") === filters.category);
+            : joined.filter((x) => x && (x.category ?? "unknown") === filters.category);
 
-        setItems(next);
-      } catch (e) {
-        console.log("🔥 join error:", e);
-      } finally {
-        setLoading(false);
+          setItems(filtered);
+        } catch (e) {
+          console.log("🔥 join error:", e);
+        } finally {
+          setLoading(false);
+        }
       }
-    });
+    );
 
 
-  return () => unsub();
-}, [tab, filters]);
+    return () => unsub();
+  }, [tab, filters]);
 
-  
+
 
 
   return (
