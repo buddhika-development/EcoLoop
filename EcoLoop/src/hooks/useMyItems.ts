@@ -52,6 +52,8 @@ export function useMyItems() {
             const list: ItemDoc[] = [];
             snap.forEach((d) => list.push({ id: d.id, ...(d.data() as any) }));
             setItems(list);
+
+            console.log("Fetched items:", list);
             setLoading(false);
         });
 

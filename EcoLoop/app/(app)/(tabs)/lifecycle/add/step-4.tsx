@@ -23,15 +23,6 @@ import { ensureNotifPermission, scheduleLocalAt, isExpoGo } from "@/src/services
 
 
 
-useEffect(() => {
-    const test = async () => {
-        const fireAt = new Date(Date.now() + 10 * 1000); // 10 seconds from now
-        await scheduleLocalAt(fireAt, "🔔 Test Notification", "If you see this, local notifications work!");
-        console.log("✅ Scheduled test notification for", fireAt.toLocaleTimeString());
-    };
-    test();
-}, []);
-
 // ---------- types & constants ----------
 type Rule = "none" | "q3" | "q6" | "yearly" | "custom";
 

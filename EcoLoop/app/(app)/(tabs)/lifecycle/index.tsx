@@ -18,6 +18,7 @@ import EcoCard from "@/src/components/lifecycle/EcoCard";
 import React from "react";
 import { useEcoTipClient } from "@/src/hooks/useEcoTipClient";
 import EcoCard2 from "@/src/components/lifecycle/EcoCard2";
+import { useUserProfile } from "@/src/hooks/useUserProfile";
 
 
 const heroBg = require("@/assets/lifecycleBG.png");
@@ -31,6 +32,8 @@ export default function LifecycleHub() {
         useLifecycleStats();
 
     const { data: ecoTip, loading: tipLoading } = useEcoTipClient("Lifecycle Care tips for sri lankans about household items");
+
+    const { user, profile } = useUserProfile();
 
     // --- simple hero animation (fade + scale from 1.05 -> 1) ---
     const bgProgress = useSharedValue(0);
@@ -89,6 +92,7 @@ export default function LifecycleHub() {
                 {/* hero content */}
                 <View className="px-6 pt-2">
                     <Animated.View entering={FadeInDown.duration(500).delay(80)}>
+                        {/* <Text className="text-white text-[30px] font-extrabold">Welcome Back {user?.displayName}👋</Text> */}
                         <Text className="text-white text-[30px] font-extrabold">Lifecycle Hub</Text>
                         <Text className="text-white/85 mt-1">
                             Track, maintain, and extend your items' life.

@@ -10,10 +10,10 @@ import { useRouter } from "expo-router";
 import { FontAwesome5 } from "@expo/vector-icons";
 
 type Filters = {
-  type:"repair"|"recycle"|"both";
-  categories:string[];
-  rating_gte?:number;
-  openNow?:boolean;
+  type: "repair" | "recycle" | "both";
+  categories: string[];
+  rating_gte?: number;
+  openNow?: boolean;
 };
 
 function countActiveFilters(f: Filters) {
@@ -31,12 +31,12 @@ export default function ShopFinder() {
 
   const { coords } = useCurrentLocation();
 
-  const [mode, setMode] = useState<"map"|"list">("map");
+  const [mode, setMode] = useState<"map" | "list">("map");
   const [q, setQ] = useState("");
   const qDebounced = useDebounce(q, 350);
 
   const [filters, setFilters] = useState<Filters>({
-    type:"both", categories:[], rating_gte:0, openNow:false
+    type: "both", categories: [], rating_gte: 0, openNow: false
   });
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -44,17 +44,17 @@ export default function ShopFinder() {
     q: qDebounced || undefined,
     type: filters.type,
     categories: filters.categories.length ? filters.categories : undefined,
-    rating_gte: filters.rating_gte && filters.rating_gte>0 ? filters.rating_gte : undefined,
+    rating_gte: filters.rating_gte && filters.rating_gte > 0 ? filters.rating_gte : undefined,
     openNow: filters.openNow || undefined,
   });
 
-  const filtered = useMemo(()=> data, [data]);
+  const filtered = useMemo(() => data, [data]);
   const filterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
   const onOpenFilter = () => setSheetOpen(true);
-  const onApplyFilter = (v:Filters) => { setFilters(v); setSheetOpen(false); };
+  const onApplyFilter = (v: Filters) => { setFilters(v); setSheetOpen(false); };
 
-  const goToShop = (id:string) => router.push(`/repair-recycle/shop/${id}`);
+  const goToShop = (id: string) => router.push(`/repair-recycle/shop/${id}`);
 
   const recenter = () => {
     if (!coords) return;
@@ -64,13 +64,13 @@ export default function ShopFinder() {
   const openSaved = () => {
     router.push("/repair-recycle/saved");
   };
-  
+
 
   return (
     <SafeAreaView style={s.safe}>
       <View style={s.root}>
         {/* Content area — either Map or List, both full-screen */}
-        {mode==="map" ? (
+        {mode === "map" ? (
           <RRMapView ref={mapRef} data={filtered} userLoc={coords || undefined} onPressMarker={goToShop} />
         ) : (
           <ScrollView contentContainerStyle={{ paddingTop: 120, paddingBottom: 24 }}>
@@ -83,22 +83,22 @@ export default function ShopFinder() {
         {/* Floating: Search + Filter + Bookmark */}
         <View style={s.floatingTop}>
           <View style={{ paddingHorizontal: 16 }}>
-          <SearchBar
+            <SearchBar
               value={q}
               onChange={setQ}
               onOpenFilter={onOpenFilter}
               filterCount={filterCount}
               onOpenSaved={openSaved}
-          />
+            />
           </View>
 
           {/* Floating: Map/List toggle */}
           <View style={[s.toggle, { marginTop: 8 }]}>
-            <TouchableOpacity onPress={()=>setMode("map")} style={[s.toggleBtn, mode==="map" && s.toggleActive]}>
-              <Text style={[s.toggleText, mode==="map" && s.toggleTextActive]}>Map</Text>
+            <TouchableOpacity onPress={() => setMode("map")} style={[s.toggleBtn, mode === "map" && s.toggleActive]}>
+              <Text style={[s.toggleText, mode === "map" && s.toggleTextActive]}>Map</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={()=>setMode("list")} style={[s.toggleBtn, mode==="list" && s.toggleActive]}>
-              <Text style={[s.toggleText, mode==="list" && s.toggleTextActive]}>List</Text>
+            <TouchableOpacity onPress={() => setMode("list")} style={[s.toggleBtn, mode === "list" && s.toggleActive]}>
+              <Text style={[s.toggleText, mode === "list" && s.toggleTextActive]}>List</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -114,7 +114,7 @@ export default function ShopFinder() {
 
         <FilterSheet
           visible={sheetOpen}
-          onClose={()=>setSheetOpen(false)}
+          onClose={() => setSheetOpen(false)}
           initial={filters}
           onApply={onApplyFilter}
         />
@@ -124,28 +124,28 @@ export default function ShopFinder() {
 }
 
 const s = StyleSheet.create({
-  safe:{ flex:1, backgroundColor: colors.surface.subtle },
-  root:{ flex:1 },
-  floatingTop:{
-    position:"absolute", left:0, right:0, top:0,
+  safe: { flex: 1, backgroundColor: colors.surface.subtle },
+  root: { flex: 1 },
+  floatingTop: {
+    position: "absolute", left: 0, right: 0, top: 0,
     paddingTop: 8,
   },
-  toggle:{
-    alignSelf:"center",
-    flexDirection:"row",
-    backgroundColor:"#fff",
-    borderWidth:1, borderColor: colors.surface.foreground,
-    borderRadius:12, overflow:"hidden"
+  toggle: {
+    alignSelf: "center",
+    flexDirection: "row",
+    backgroundColor: colors.surface.base,
+    borderWidth: 1, borderColor: colors.surface.foreground,
+    borderRadius: 12, overflow: "hidden"
   },
-  toggleBtn:{ paddingVertical:8, paddingHorizontal:16 },
-  toggleActive:{ backgroundColor: colors.brand.primary },
-  toggleText:{ color: colors.text.base, fontWeight:"700" },
-  toggleTextActive:{ color: colors.text.inverse },
-  fabWrap:{ position:"absolute", right:18, bottom:70 },
-  fab:{
-    width:53, height:53, borderRadius:30,
+  toggleBtn: { paddingVertical: 8, paddingHorizontal: 16 },
+  toggleActive: { backgroundColor: colors.brand.primary },
+  toggleText: { color: colors.text.base, fontWeight: "700" },
+  toggleTextActive: { color: colors.text.inverse },
+  fabWrap: { position: "absolute", right: 18, bottom: 70 },
+  fab: {
+    width: 53, height: 53, borderRadius: 30,
     backgroundColor: colors.brand.primary,
-    alignItems:"center", justifyContent:"center",
-    shadowColor:"#000", shadowOpacity:0.2, shadowRadius:6, elevation:4
+    alignItems: "center", justifyContent: "center",
+    shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 6, elevation: 4
   }
 });

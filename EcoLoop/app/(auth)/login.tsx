@@ -46,7 +46,7 @@ export default function Login() {
         setLoading(true);
         try {
             await signInWithEmailAndPassword(auth, email.trim(), password);
-            router.replace("/(app)/(tabs)/home");
+            router.replace("/(app)/(tabs)/lifecycle");
         } catch (e: any) {
             const msg = toUiError(e?.code ?? "", e?.message ?? "");
             setErrorText(msg);
