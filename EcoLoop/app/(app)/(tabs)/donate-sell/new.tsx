@@ -5,6 +5,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { db } from "@/src/lib/firebase";
 import { collection, query, where, orderBy, getDocs, addDoc, doc, serverTimestamp, } from "firebase/firestore";
 import { useUserProfile } from "@/src/hooks/useUserProfile";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type ListingType = "sell" | "donate";
 
@@ -19,6 +20,7 @@ type MyItem = {
 export default function NewListing() {
 
   const { user } = useUserProfile();
+  const insets = useSafeAreaInsets();
 
   const [items, setItems] = useState<MyItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
@@ -136,16 +138,6 @@ export default function NewListing() {
           Add Item To{"\n"}Sell/Donate
         </Text>
 
-        {/* <View className="mt-6">
-          <Text className="text-xs text-gray-500 mb-2">Model Number</Text>
-          <TextInput
-            className="h-11 rounded-xl px-4 border border-gray-200 bg-gray-50"
-            placeholder="mc-1020 cf"
-            value={model}
-            onChangeText={setModel}
-          />
-        </View> */}
-
         {/* 🔸 CHANGED: Model number → dropdown */}
         <View className="mt-6">
           <Text className="text-xs text-gray-500 mb-2">Model Number</Text>
@@ -165,8 +157,8 @@ export default function NewListing() {
           </Pressable>
 
           {/* 🔹 ADDED modal picker */}
-          <Modal visible={pickerOpen} animationType="slide" onRequestClose={() => setPickerOpen(false)}>
-            <View className="flex-1 bg-white">
+          <Modal visible={pickerOpen} animationType="slide" onRequestClose={() => setPickerOpen(false)} statusBarTranslucent>
+            <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
               <View className="px-4 py-3 border-b border-gray-200 flex-row items-center">
                 <TouchableOpacity onPress={() => setPickerOpen(false)}>
                   <Text className="text-lg">✕</Text>

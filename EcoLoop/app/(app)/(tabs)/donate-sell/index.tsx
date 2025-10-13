@@ -249,17 +249,7 @@ function ProductCard({ item }: ProductCardProps) {
         </Text>
       )}
 
-      <View className="flex-row mt-1">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Text
-            key={i}
-            className={`text-xs mr-1 ${i < item.rating ? "text-amber-500" : "text-surface-foreground"
-              }`}
-          >
-            ★
-          </Text>
-        ))}
-      </View>
+      
     </Pressable>
   );
 }
@@ -267,45 +257,48 @@ function ProductCard({ item }: ProductCardProps) {
 export default function DonateSell() {
 
 
-  const [tab, setTab] = useState<Tab>("sell");
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<FilterState>({
-    category: "all",
-    minPrice: null,
-    maxPrice: null,
-  });
+    const [tab, setTab] = useState<Tab>("sell");         
+    const [items, setItems] = useState<Item[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [filters, setFilters] = useState<FilterState>({
+      category: "all",
+      minPrice: null,
+      maxPrice: null,
+    });
+
+    
+
+    useEffect(() => {
+  setLoading(true);
+
+  const ref = collection(db, "listings");
+  // const q = qf(ref, where("status", "==", "active"), where("type", "==", tab));
+  const q = buildListingQuery(db, tab, filters);
+
+  const unsub = onSnapshot(
+    q,
+    async (snap) => {
+      try {
+        const joined = await Promise.all(
+          // sorted.map(async (d, idx) => {
+          snap.docs.map(async (d, idx) => {
+            const listing = d.data() as ListingDoc;
+
+            // DEBUG: show raw listing + hint
+            console.log(`[#${idx}] listing ${d.id} → type=${listing.type}, price=${listing.price}`);
+
+            // Flexible fetch that covers all cases described above
+            let itemData = await fetchItemDocFlexible(listing.itemRef);
+
+            if (!itemData) {
+              console.warn(`⚠️ Item not found for listing ${d.id}. itemRef=`, listing.itemRef);
+              // keep a minimal card so UI stays stable
+              return toCardItem(d.id, listing, { id: "unknown" });
+            }
 
 
 
-  useEffect(() => {
-    setLoading(true);
-
-    const ref = collection(db, "listings");
-    // const q = qf(ref, where("status", "==", "active"), where("type", "==", tab));
-    const q = buildListingQuery(db, tab, filters);
-
-    const unsub = onSnapshot(
-      q,
-      async (snap) => {
-        try {
-          const joined = await Promise.all(
-            snap.docs.map(async (d, idx) => {
-              const listing = d.data() as ListingDoc;
-
-              // DEBUG: show raw listing + hint
-              console.log(`[#${idx}] listing ${d.id} → type=${listing.type}, price=${listing.price}`);
-
-              // Flexible fetch that covers all cases described above
-              let itemData = await fetchItemDocFlexible(listing.itemRef);
-
-              if (!itemData) {
-                console.warn(`⚠️ Item not found for listing ${d.id}. itemRef=`, listing.itemRef);
-                // keep a minimal card so UI stays stable
-                return toCardItem(d.id, listing, { id: "unknown" });
-              }
-
-              // DEBUG: show what we got
+           // DEBUG: show what we got
               console.log(`[#${idx}] itemData keys:`, Object.keys(itemData));
 
               if (itemData) {
@@ -317,11 +310,11 @@ export default function DonateSell() {
             })
           );
 
-          const filtered = !filters.category || filters.category === "all"
+          const next = !filters.category || filters.category === "all"
             ? joined
             : joined.filter((x) => x && (x.category ?? "unknown") === filters.category);
 
-          setItems(filtered);
+          setItems(next);
         } catch (e) {
           console.log("🔥 join error:", e);
         } finally {

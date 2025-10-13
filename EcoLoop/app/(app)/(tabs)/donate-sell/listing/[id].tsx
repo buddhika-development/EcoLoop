@@ -30,6 +30,7 @@ type ItemDoc = {
   purchaseDate?: string;       
   brand?: string;
   category?: string;
+  description?: string;
 };
 
 type ListingDoc = {
@@ -40,6 +41,7 @@ type ListingDoc = {
   status: "active" | "inactive";
   createdAt?: any;
   updatedAt?: any;
+  description?: string; 
 };
 
 type OwnerDoc = {
@@ -148,6 +150,19 @@ export default function ListingItemPage() {
   const [item, setItem] = useState<ItemDoc | null>(null);
   const [listing, setListing] = useState<ListingDoc | null>(null);
   const [owner, setOwner] = useState<OwnerDoc | null>(null);
+  const [descExpanded, setDescExpanded] = useState(false);
+
+  const rawDescription = useMemo(() => {
+    const s = (listing?.description ?? item?.description ?? "").trim();
+    return s.length ? s : undefined;
+  }, [listing, item]);
+
+  const shownDescription = useMemo(() => {
+    if (!rawDescription) return undefined;
+    const cleaned = rawDescription.replace(/\s+\n/g, "\n").replace(/\n{3,}/g, "\n\n");
+    if (descExpanded || cleaned.length <= 220) return cleaned;
+    return cleaned.slice(0, 220) + "…";
+  }, [rawDescription, descExpanded]);
   
   const addressText = useMemo(() => {
     if (!owner?.address) return undefined;
@@ -279,10 +294,22 @@ export default function ListingItemPage() {
         </Text>
       </View>
 
-      {/* 5) Common description */}
-      <Text className="text-gray-600 mb-3">
-        A reliable item in good condition, suitable for everyday use. Clean and well-maintained.
-      </Text>
+      {/* 5) Description from listing/item */}
+      {shownDescription ? (
+        <View className="mb-3">
+        <Text className="text-gray-700 leading-6">{shownDescription}</Text>
+          {rawDescription && rawDescription.length > 220 && (
+            <TouchableOpacity onPress={() => setDescExpanded((v) => !v)} className="mt-2">
+              <Text className="text-blue-600 font-medium">
+                {descExpanded ? "Show less" : "Read more"}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      ) : (
+        <Text className="text-gray-400 italic mb-3">No description provided.</Text>
+      )}
+
 
       {item?.images && item.images.length > 1 && (
         <View className="flex-row flex-wrap gap-3 mb-6">
