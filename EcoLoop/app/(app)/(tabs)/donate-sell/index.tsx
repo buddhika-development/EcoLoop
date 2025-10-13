@@ -249,17 +249,7 @@ function ProductCard({ item }: ProductCardProps) {
         </Text>
       )}
 
-      <View className="flex-row mt-1">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Text
-            key={i}
-            className={`text-xs mr-1 ${i < item.rating ? "text-amber-500" : "text-surface-foreground"
-              }`}
-          >
-            ★
-          </Text>
-        ))}
-      </View>
+      
     </Pressable>
   );
 }
@@ -289,12 +279,6 @@ export default function DonateSell() {
     q,
     async (snap) => {
       try {
-        // const sorted = [...snap.docs].sort((a, b) => {
-        //   const ta = a.data()?.createdAt?.toMillis?.() ?? 0;
-        //   const tb = b.data()?.createdAt?.toMillis?.() ?? 0;
-        //   return tb - ta;
-        // });
-
         const joined = await Promise.all(
           // sorted.map(async (d, idx) => {
           snap.docs.map(async (d, idx) => {
@@ -325,8 +309,6 @@ export default function DonateSell() {
           })
         );
 
-        // console.log("✅ Final joined rows (first 3):", joined.slice(0, 3));
-        // setItems(joined);
         const next =
           !filters.category || filters.category === "all"
             ? joined
