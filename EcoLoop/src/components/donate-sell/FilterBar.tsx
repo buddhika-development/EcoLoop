@@ -14,6 +14,7 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import CategoryChips from "./CategoryChips";
 import PriceRange from "./PriceRange";
 import type { Tab, FilterState } from "./FilterTypes";
+import { Feather } from "@expo/vector-icons";
 
 type Props = {
   tab: Tab;
@@ -47,6 +48,10 @@ export default function FilterBar({ tab, value, onApply, onClear, categories }: 
     setOpen(false);
   };
 
+  const filtersActive =
+    (value?.category && value.category !== "all") ||
+    (isSell && (value?.minPrice != null || value?.maxPrice != null));
+
   return (
     <>
       <View className="flex-row items-center justify-between mt-3">
@@ -67,9 +72,14 @@ export default function FilterBar({ tab, value, onApply, onClear, categories }: 
             });
             setOpen(true);
           }}
-          className="px-3 py-2 rounded-xl bg-brand-primary"
+          className="h-10 w-10 rounded-xl bg-brand-primary items-center justify-center"
+          accessibilityRole="button"
+          accessibilityLabel="Open filters"
         >
-          <Text className="text-white font-semibold">Filters</Text>
+          <Feather name="filter" size={18} color="#FFFFFF" />
+          {filtersActive && (
+            <View className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-brand-accent" />
+          )}
         </TouchableOpacity>
       </View>
 

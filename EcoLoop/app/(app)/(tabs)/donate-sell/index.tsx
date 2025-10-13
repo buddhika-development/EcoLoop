@@ -314,7 +314,7 @@ export default function DonateSell() {
             ? joined
             : joined.filter((x) => x && (x.category ?? "unknown") === filters.category);
 
-          setItems(filtered);
+          setItems(next);
         } catch (e) {
           console.log("🔥 join error:", e);
         } finally {
